@@ -585,16 +585,6 @@ lsetadditive(lua_State *L) {
 	return 0;
 }
 
-static int
-lgetparent(lua_State *L) {
-	struct sprite *s = self(L);
-	if (s->parent == NULL)
-		return 0;
-	lua_getuservalue(L, 1);
-	lua_rawgeti(L, -1, 0);
-	return 1;
-}
-
 static void
 lgetter(lua_State *L) {
 	luaL_Reg l[] = {
@@ -612,7 +602,6 @@ lgetter(lua_State *L) {
 		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },
 		{"has_parent", lhasparent },
-		{"parent", lgetparent },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -638,18 +627,6 @@ lsetter(lua_State *L) {
 	luaL_newlib(L,l);
 }
 
-static void
-fetch_parent(lua_State *L, int index) {
-	lua_getuservalue(L, 1);
-	lua_rawgeti(L, -1, index+1);
-	lua_getuservalue(L, -1);
-	if (lua_istable(L, -1)) {
-		lua_pushvalue(L, 1);
-		lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
-	}
-	lua_pop(L, 1);
-}
-
 static int
 lfetch(lua_State *L) {
 	struct sprite *s = self(L);
@@ -657,45 +634,28 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	fetch_parent(L, index);
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, index+1);
     
 	return 1;
 }
 
 static int
 lfetch_by_index(lua_State *L) {
-	struct sprite *s = self(L);
-	if (s->type != TYPE_ANIMATION) {
-		return luaL_error(L, "Only animation can fetch by index");
-	}
-	int index = (int)luaL_checkinteger(L, 2);
-	struct pack_animation *ani = s->s.ani;
-	if (index < 0 || index >= ani->component_number) {
-		return luaL_error(L, "Component index out of range:%d", index);
-	}
+    struct sprite *s = self(L);
+    if (s->type != TYPE_ANIMATION) {
+        return luaL_error(L, "Only animation can fetch by index");
+    }
+    int index = (int)luaL_checkinteger(L, 2);
+    struct pack_animation *ani = s->s.ani;
+    if (index < 0 || index >= ani->component_number) {
+        return luaL_error(L, "Component index out of range:%d", index);
+    }
     
-	fetch_parent(L, index);
+    lua_getuservalue(L, 1);
+    lua_rawgeti(L, -1, index+1);
     
-	return 1;
-}
-
-static void
-unlink_parent(lua_State *L, const char * name, int idx) {
-	lua_getuservalue(L, idx);	// reftable
-	lua_rawgeti(L, -1, 0);	// reftable parent
-	struct sprite * parent = lua_touserdata(L, -1);
-	if (parent == NULL) {
-		luaL_error(L, "No parent object");
-	}
-	int index = sprite_child(parent, name);
-	if (index < 0) {
-		luaL_error(L, "Invalid parent child link");
-	}
-	lua_getuservalue(L, -1);	// reftable parent parentref
-	lua_pushnil(L);
-	lua_rawseti(L, -2, index);
-	lua_pop(L, 3);
-	sprite_mount(parent, index, NULL);
+    return 1;
 }
 
 static int
@@ -707,20 +667,6 @@ lmount(lua_State *L) {
 		return luaL_error(L, "No child name %s", name);
 	}
 	lua_getuservalue(L, 1);
-    
-	lua_rawgeti(L, -1, index+1);
-	if (lua_isnil(L, -1)) {
-		lua_pop(L, 1);
-	} else {
-		// try to remove parent ref
-		lua_getuservalue(L, -1);
-		if (lua_istable(L, -1)) {
-			lua_pushnil(L);
-			lua_rawseti(L, -2, 0);
-		}
-		lua_pop(L, 2);
-	}
-    
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
@@ -728,19 +674,13 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			unlink_parent(L, name, 3);
+			struct sprite* p = child->parent;
+			sprite_mount(p, index, NULL);
+			//return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
-        
-		// set child's new parent
-		lua_getuservalue(L, 3);
-		if (lua_istable(L, -1)) {
-			lua_pushvalue(L, 1);
-			lua_rawseti(L, -2, 0);
-		}
-		lua_pop(L, 1);
 	}
 	return 0;
 }
