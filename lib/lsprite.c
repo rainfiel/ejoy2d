@@ -40,13 +40,13 @@ newlabel(lua_State *L, struct pack_label *label) {
 }
 
 /*
-	integer width
-	integer height
-	integer size
-	uinteger color
-	string l/r/c
-
-	ret: userdata
+ integer width
+ integer height
+ integer size
+ uinteger color
+ string l/r/c
+ 
+ ret: userdata
  */
 static int
 lnewlabel(lua_State *L) {
@@ -64,20 +64,20 @@ lnewlabel(lua_State *L) {
 		label.align = LABEL_ALIGN_LEFT;
 	} else {
 		switch(align[0]) {
-		case 'l':
-		case 'L':
-			label.align = LABEL_ALIGN_LEFT;
-			break;
-		case 'r':
-		case 'R':
-			label.align = LABEL_ALIGN_RIGHT;
-			break;
-		case 'c':
-		case 'C':
-			label.align = LABEL_ALIGN_CENTER;
-			break;
-		default:
-			return luaL_error(L, "Align must be left/right/center");
+            case 'l':
+            case 'L':
+                label.align = LABEL_ALIGN_LEFT;
+                break;
+            case 'r':
+            case 'R':
+                label.align = LABEL_ALIGN_RIGHT;
+                break;
+            case 'c':
+            case 'C':
+                label.align = LABEL_ALIGN_CENTER;
+                break;
+            default:
+                return luaL_error(L, "Align must be left/right/center");
 		}
 	}
 	newlabel(L, &label);
@@ -125,8 +125,8 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
 
 static int
 lgenoutline(lua_State *L) {
-  label_gen_outline(lua_toboolean(L, 1));
-  return 0;
+    label_gen_outline(lua_toboolean(L, 1));
+    return 0;
 }
 
 static const char * srt_key[] = {
@@ -172,7 +172,7 @@ newanchor(lua_State *L) {
 	s->ps = NULL;
 	s->s.mat = (struct matrix *)(s+1);
 	matrix_identity(s->s.mat);
-
+    
 	return s;
 }
 
@@ -212,10 +212,10 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 }
 
 /*
-	userdata sprite_pack
-	integer id
-
-	ret: userdata sprite
+ userdata sprite_pack
+ integer id
+ 
+ ret: userdata sprite
  */
 static int
 lnew(lua_State *L) {
@@ -310,7 +310,7 @@ lsetmat(lua_State *L) {
 		return luaL_error(L, "Need a matrix");
 	s->t.mat = &s->mat;
 	s->mat = *m;
-
+    
 	return 0;
 }
 
@@ -349,7 +349,7 @@ lgetwpos(lua_State *L) {
 		if (t == NULL) {
 			luaL_error(L, "Need target sprite");
 		}
-
+        
 		int pos[2];
 		if (sprite_pos(s, &srt, t, pos) == 0) {
 			lua_pushinteger(L, pos[0]);
@@ -391,7 +391,7 @@ lsetpicmask(lua_State *L) {
 	}
 	struct sprite *mask = (struct sprite*) lua_touserdata(L, 2);
 	if (mask && mask->type != TYPE_PICTURE) {
-    return luaL_error(L, "Mask must be picture");
+        return luaL_error(L, "Mask must be picture");
 	}
 	struct pack_picture *m = NULL;
 	if (mask) {
@@ -445,68 +445,68 @@ lsettext(lua_State *L) {
 		lua_setuservalue(L, 1);
 		return 0;
 	}
-  if (lua_isstring(L, 2)) {
-    s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
-    s->data.rich_text->text = lua_tostring(L, 2);
-    s->data.rich_text->count = 0;
+    if (lua_isstring(L, 2)) {
+        s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+        s->data.rich_text->text = lua_tostring(L, 2);
+        s->data.rich_text->count = 0;
 		s->data.rich_text->fields = NULL;
-
+        
 		lua_createtable(L, 2, 0);
 		lua_pushvalue(L, 2);
 		lua_rawseti(L, -2, 1);
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
-    return 0;
-  }
-  
-  s->data.rich_text = NULL;
-  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
-    return luaL_error(L, "rich text must has a table with two items");
-  }
-  
-  lua_rawgeti(L, 2, 1);
-  const char *txt = luaL_checkstring(L, -1);
-  lua_pop(L, 1);
-  
-  lua_rawgeti(L, 2, 2);
+        return 0;
+    }
+    
+    s->data.rich_text = NULL;
+    if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
+        return luaL_error(L, "rich text must has a table with two items");
+    }
+    
+    lua_rawgeti(L, 2, 1);
+    const char *txt = luaL_checkstring(L, -1);
+    lua_pop(L, 1);
+    
+    lua_rawgeti(L, 2, 2);
 	int cnt = lua_rawlen(L, -1);
-  lua_pop(L, 1);
-  
+    lua_pop(L, 1);
+    
 	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
 	
 	rich->text = txt;
-  rich->count = cnt;
+    rich->count = cnt;
 	int size = cnt * sizeof(struct label_field);
 	rich->fields = (struct label_field*)lua_newuserdata(L, size);
-
+    
 	struct label_field *fields = rich->fields;
 	int i;
-  lua_rawgeti(L, 2, 2);
+    lua_rawgeti(L, 2, 2);
 	for (i=0; i<cnt; i++) {
 		lua_rawgeti(L, -1, i+1);
 		if (!lua_istable(L,-1)) {
 			return luaL_error(L, "rich text unit must be table");
 		}
-
+        
 		lua_rawgeti(L, -1, 1);  //start
 		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
-    
-    lua_rawgeti(L, -1, 2);  //end
+        
+        lua_rawgeti(L, -1, 2);  //end
 		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
-    lua_pop(L, 1);
-
+        lua_pop(L, 1);
+        
 		lua_rawgeti(L, -1, 3);  //color
-		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1); 
+		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
-
+        
 		//extend here
-
+        
 		lua_pop(L, 1);
 	}
-  lua_pop(L, 1);
-
+    lua_pop(L, 1);
+    
 	lua_createtable(L,3,0);
 	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, 1);
@@ -515,7 +515,7 @@ lsettext(lua_State *L) {
 	lua_rawgeti(L, 2, 1);
 	lua_rawseti(L, -2, 3);
 	lua_setuservalue(L, 1);
-
+    
 	s->data.rich_text = rich;
 	return 0;
 }
@@ -526,10 +526,10 @@ lgettext(lua_State *L) {
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Only label can get text");
 	}
-  if (s->data.rich_text) {
-    lua_pushstring(L, s->data.rich_text->text);
-    return 1;
-  }
+    if (s->data.rich_text) {
+        lua_pushstring(L, s->data.rich_text->text);
+        return 1;
+    }
 	return 0;
 }
 
@@ -585,6 +585,16 @@ lsetadditive(lua_State *L) {
 	return 0;
 }
 
+static int
+lgetparent(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->parent == NULL)
+		return 0;
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, 0);
+	return 1;
+}
+
 static void
 lgetter(lua_State *L) {
 	luaL_Reg l[] = {
@@ -602,6 +612,7 @@ lgetter(lua_State *L) {
 		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },
 		{"has_parent", lhasparent },
+		{"parent", lgetparent },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -636,26 +647,52 @@ lfetch(lua_State *L) {
 		return 0;
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
-
+	lua_getuservalue(L, -1);
+	lua_pushvalue(L, 1);
+	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	lua_pop(L, 1);
+    
 	return 1;
 }
 
 static int
 lfetch_by_index(lua_State *L) {
-  struct sprite *s = self(L);
-  if (s->type != TYPE_ANIMATION) {
-    return luaL_error(L, "Only animation can fetch by index");
-  }
-  int index = (int)luaL_checkinteger(L, 2);
-  struct pack_animation *ani = s->s.ani;
-  if (index < 0 || index >= ani->component_number) {
-    return luaL_error(L, "Component index out of range:%d", index);
-  }
-  
-  lua_getuservalue(L, 1);
-  lua_rawgeti(L, -1, index+1);
-  
-  return 1;
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANIMATION) {
+		return luaL_error(L, "Only animation can fetch by index");
+	}
+	int index = (int)luaL_checkinteger(L, 2);
+	struct pack_animation *ani = s->s.ani;
+	if (index < 0 || index >= ani->component_number) {
+		return luaL_error(L, "Component index out of range:%d", index);
+	}
+    
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, index+1);
+    
+	lua_pushvalue(L, 1);
+	lua_rawseti(L, -3, 0);	// set self to uservalue[0] (parent)
+    
+	return 1;
+}
+
+static void
+unlink_parent(lua_State *L, const char * name, int idx) {
+	lua_getuservalue(L, idx);	// reftable
+	lua_rawgeti(L, -1, 0);	// reftable parent
+	struct sprite * parent = lua_touserdata(L, -1);
+	if (parent == NULL) {
+		luaL_error(L, "No parent object");
+	}
+	int index = sprite_child(parent, name);
+	if (index < 0) {
+		luaL_error(L, "Invalid parent child link");
+	}
+	lua_getuservalue(L, -1);	// reftable parent parentref
+	lua_pushnil(L);
+	lua_rawseti(L, -2, index);
+	lua_pop(L, 3);
+	sprite_mount(parent, index, NULL);
 }
 
 static int
@@ -667,38 +704,49 @@ lmount(lua_State *L) {
 		return luaL_error(L, "No child name %s", name);
 	}
 	lua_getuservalue(L, 1);
+    
 	lua_rawgeti(L, -1, index+1);
-	struct sprite * oldchild = (struct sprite *)lua_touserdata(L, -1);
-	if (oldchild) {
-		oldchild->parent = NULL;
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+	} else {
+		// try to remove parent ref
+		lua_getuservalue(L, -1);
+		lua_pushnil(L);
+		lua_rawseti(L, -2, 0);
+		lua_pop(L, 2);
 	}
-	lua_pop(L, 1);
+    
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
-
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
+			unlink_parent(L, name, 3);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
+        
+		// set child's new parent
+		lua_getuservalue(L, 3);
+		lua_pushvalue(L, 1);
+		lua_rawseti(L, -2, 0);
+		lua_pop(L, 1);
 	}
 	return 0;
 }
 
 /*
-	userdata sprite
-	table { .x .y .sx .sy .rot }
+ userdata sprite
+ table { .x .y .sx .sy .rot }
  */
 static int
 ldraw(lua_State *L) {
 	struct sprite *s = self(L);
 	struct srt srt;
-
+    
 	fill_srt(L,&srt,2);
 	sprite_draw(s, &srt);
 	return 0;
@@ -725,8 +773,8 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-  if (s->data.rich_text != NULL)
-      label_size(s->data.rich_text->text, s->s.label, &width, &height);
+    if (s->data.rich_text != NULL)
+        label_size(s->data.rich_text->text, s->s.label, &width, &height);
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
     lua_pushinteger(L, s->s.label->size);
@@ -768,7 +816,7 @@ lset_anchor_particle(lua_State *L) {
 	if (p==NULL)
 		return luaL_error(L, "need a sprite");
 	s->data.mask = p->s.pic;
-
+    
 	return 0;
 }
 
@@ -786,16 +834,16 @@ lmatrix_multi_draw(lua_State *L) {
 	if (lua_rawlen(L, 5) < cnt) {
 		return luaL_error(L, "color length must less then particle count");
 	}
-
+    
 	struct matrix *mat = (struct matrix *)lua_touserdata(L, 2);
-
+    
 	if (s->t.mat == NULL) {
 		s->t.mat = &s->mat;
 		matrix_identity(&s->mat);
 	}
 	struct matrix *parent_mat = s->t.mat;
 	uint32_t parent_color = s->t.color;
-
+    
 	int i;
 	if (mat) {
 		struct matrix tmp;
@@ -807,7 +855,7 @@ lmatrix_multi_draw(lua_State *L) {
 			s->t.mat = &tmp;
 			s->t.color = (uint32_t)lua_tounsigned(L, -1);
 			lua_pop(L, 2);
-
+            
 			sprite_draw(s, NULL);
 		}
 	} else {
@@ -818,14 +866,14 @@ lmatrix_multi_draw(lua_State *L) {
 			s->t.mat = m;
 			s->t.color = (uint32_t)lua_tounsigned(L, -1);
 			lua_pop(L, 2);
-
+            
 			sprite_draw(s, NULL);
 		}
 	}
-
+    
 	s->t.mat = parent_mat;
 	s->t.color = parent_color;
-
+    
 	return 0;
 }
 
@@ -849,14 +897,14 @@ lmulti_draw(lua_State *L) {
     }
 	struct srt srt;
 	fill_srt(L, &srt, 2);
-
+    
 	if (s->t.mat == NULL) {
 		s->t.mat = &s->mat;
 		matrix_identity(&s->mat);
 	}
 	struct matrix *parent_mat = s->t.mat;
 	uint32_t parent_color = s->t.color;
-
+    
 	int i;
     if (n == 5) {
         for (i = 0; i < cnt; i++) {
@@ -865,7 +913,7 @@ lmulti_draw(lua_State *L) {
             s->t.mat = (struct matrix *)lua_touserdata(L, -2);
             s->t.color = (uint32_t)lua_tounsigned(L, -1);
             lua_pop(L, 2);
-
+            
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
         }
     }else {
@@ -877,14 +925,14 @@ lmulti_draw(lua_State *L) {
             s->t.color = (uint32_t)lua_tounsigned(L, -2);
             s->t.additive = (uint32_t)lua_tounsigned(L, -1);
             lua_pop(L, 3);
-
+            
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
         }
     }
-
+    
 	s->t.mat = parent_mat;
 	s->t.color = parent_color;
-
+    
 	return 0;
 }
 
@@ -953,7 +1001,7 @@ ltest(lua_State *L) {
 		}
 		lua_replace(L, -2);
 	}
-
+    
 	return 1;
 }
 
@@ -969,35 +1017,35 @@ lps(lua_State *L) {
 	int n = lua_gettop(L);
 	int x,y,scale;
 	switch (n) {
-	case 4:
-		// x,y,scale
-		x = luaL_checknumber(L,2) * SCREEN_SCALE;
-		y = luaL_checknumber(L,3) * SCREEN_SCALE;
-		scale = luaL_checknumber(L,4) * 1024;
-		mat[0] = scale;
-		mat[1] = 0;
-		mat[2] = 0;
-		mat[3] = scale;
-		mat[4] = x;
-		mat[5] = y;
-		break;
-	case 3:
-		// x,y
-		x = luaL_checknumber(L,2) * SCREEN_SCALE;
-		y = luaL_checknumber(L,3) * SCREEN_SCALE;
-		mat[4] = x;
-		mat[5] = y;
-		break;
-	case 2:
-		// scale
-		scale = luaL_checknumber(L,2) * 1024;
-		mat[0] = scale;
-		mat[1] = 0;
-		mat[2] = 0;
-		mat[3] = scale;
-		break;
-	default:
-		return luaL_error(L, "Invalid parm");
+        case 4:
+            // x,y,scale
+            x = luaL_checknumber(L,2) * SCREEN_SCALE;
+            y = luaL_checknumber(L,3) * SCREEN_SCALE;
+            scale = luaL_checknumber(L,4) * 1024;
+            mat[0] = scale;
+            mat[1] = 0;
+            mat[2] = 0;
+            mat[3] = scale;
+            mat[4] = x;
+            mat[5] = y;
+            break;
+        case 3:
+            // x,y
+            x = luaL_checknumber(L,2) * SCREEN_SCALE;
+            y = luaL_checknumber(L,3) * SCREEN_SCALE;
+            mat[4] = x;
+            mat[5] = y;
+            break;
+        case 2:
+            // scale
+            scale = luaL_checknumber(L,2) * 1024;
+            mat[0] = scale;
+            mat[1] = 0;
+            mat[2] = 0;
+            mat[3] = scale;
+            break;
+        default:
+            return luaL_error(L, "Invalid parm");
 	}
 	return 0;
 }
@@ -1013,22 +1061,22 @@ lsr(lua_State *L) {
 	int sx=1024,sy=1024,r=0;
 	int n = lua_gettop(L);
 	switch (n) {
-	case 4:
-		// sx,sy,rot
-		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
-		// go through
-	case 3:
-		// sx, sy
-		sx = luaL_checknumber(L,2) * 1024;
-		sy = luaL_checknumber(L,3) * 1024;
-		break;
-	case 2:
-		// rot
-		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
-		break;
+        case 4:
+            // sx,sy,rot
+            r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+            // go through
+        case 3:
+            // sx, sy
+            sx = luaL_checknumber(L,2) * 1024;
+            sy = luaL_checknumber(L,3) * 1024;
+            break;
+        case 2:
+            // rot
+            r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+            break;
 	}
 	matrix_sr(m, sx, sy, r);
-
+    
 	return 0;
 }
 
@@ -1057,7 +1105,7 @@ lmethod(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
-
+    
 	int i;
 	int nk = sizeof(srt_key)/sizeof(srt_key[0]);
 	for (i=0;i<nk;i++) {
@@ -1092,13 +1140,13 @@ ejoy2d_sprite(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
-
+    
 	lmethod(L);
 	lua_setfield(L, -2, "method");
 	lgetter(L);
 	lua_setfield(L, -2, "get");
 	lsetter(L);
 	lua_setfield(L, -2, "set");
-
+    
 	return 1;
 }
