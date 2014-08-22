@@ -670,13 +670,17 @@ lmount(lua_State *L) {
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
+		lua_rawgeti(L, -2, index+1);
+		struct sprite * oldchild = (struct sprite *)lua_touserdata(L, -1);
+		if (oldchild) {
+			oldchild->parent = NULL;
+		}
+		lua_pop(L, 1);
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			struct sprite* p = child->parent;
-			sprite_mount(p, index, NULL);
-			//return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
+			return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
