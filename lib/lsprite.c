@@ -638,6 +638,18 @@ lsetter(lua_State *L) {
 	luaL_newlib(L,l);
 }
 
+static void
+fetch_parent(lua_State *L, int index) {
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, index+1);
+	lua_getuservalue(L, -1);
+	if (lua_istable(L, -1)) {
+		lua_pushvalue(L, 1);
+		lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	}
+	lua_pop(L, 1);
+}
+
 static int
 lfetch(lua_State *L) {
 	struct sprite *s = self(L);
@@ -645,12 +657,7 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	lua_getuservalue(L, 1);
-	lua_rawgeti(L, -1, index+1);
-	lua_getuservalue(L, -1);
-	lua_pushvalue(L, 1);
-	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
-	lua_pop(L, 1);
+	fetch_parent(L, index);
     
 	return 1;
 }
@@ -667,11 +674,7 @@ lfetch_by_index(lua_State *L) {
 		return luaL_error(L, "Component index out of range:%d", index);
 	}
     
-	lua_getuservalue(L, 1);
-	lua_rawgeti(L, -1, index+1);
-    
-	lua_pushvalue(L, 1);
-	lua_rawseti(L, -3, 0);	// set self to uservalue[0] (parent)
+	fetch_parent(L, index);
     
 	return 1;
 }
@@ -711,8 +714,10 @@ lmount(lua_State *L) {
 	} else {
 		// try to remove parent ref
 		lua_getuservalue(L, -1);
-		lua_pushnil(L);
-		lua_rawseti(L, -2, 0);
+		if (lua_istable(L, -1)) {
+			lua_pushnil(L);
+			lua_rawseti(L, -2, 0);
+		}
 		lua_pop(L, 2);
 	}
     
@@ -731,8 +736,10 @@ lmount(lua_State *L) {
         
 		// set child's new parent
 		lua_getuservalue(L, 3);
-		lua_pushvalue(L, 1);
-		lua_rawseti(L, -2, 0);
+		if (lua_istable(L, -1)) {
+			lua_pushvalue(L, 1);
+			lua_rawseti(L, -2, 0);
+		}
 		lua_pop(L, 1);
 	}
 	return 0;
