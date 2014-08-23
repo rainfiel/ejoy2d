@@ -198,10 +198,10 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
 		struct sprite *c = newsprite(L, pack, childid);
-		c->name = sprite_childname(s, i);
-		sprite_mount(s, i, c);
-		update_message(c, pack, id, i, s->frame);
 		if (c) {
+			c->name = sprite_childname(s, i);
+			sprite_mount(s, i, c);
+			update_message(c, pack, id, i, s->frame);
 			lua_rawseti(L, -2, i+1);
 		}
 	}
@@ -639,7 +639,7 @@ lsetter(lua_State *L) {
 }
 
 static void
-ref_parent(lua_State *L, int index, int parent) {
+get_reftable(lua_State *L, int index) {
 	lua_getuservalue(L, index);
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
@@ -647,6 +647,11 @@ ref_parent(lua_State *L, int index, int parent) {
 		lua_pushvalue(L, -1);
 		lua_setuservalue(L, index);
 	}
+}
+
+static void
+ref_parent(lua_State *L, int index, int parent) {
+	get_reftable(L, index);
 	lua_pushvalue(L, parent);
 	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
 	lua_pop(L, 1);
@@ -692,20 +697,20 @@ lfetch_by_index(lua_State *L) {
 }
 
 static void
-unlink_parent(lua_State *L, const char * name, int idx) {
+unlink_parent(lua_State *L, struct sprite * child, int idx) {
 	lua_getuservalue(L, idx);	// reftable
 	lua_rawgeti(L, -1, 0);	// reftable parent
 	struct sprite * parent = lua_touserdata(L, -1);
 	if (parent == NULL) {
 		luaL_error(L, "No parent object");
 	}
-	int index = sprite_child(parent, name);
+	int index = sprite_child_ptr(parent, child);
 	if (index < 0) {
-		luaL_error(L, "Invalid parent child link");
+		luaL_error(L, "Invalid child object");
 	}
 	lua_getuservalue(L, -1);	// reftable parent parentref
 	lua_pushnil(L);
-	lua_rawseti(L, -2, index);
+	lua_rawseti(L, -2, index+1);
 	lua_pop(L, 3);
 	sprite_mount(parent, index, NULL);
 }
@@ -720,10 +725,17 @@ lmount(lua_State *L) {
 	}
 	lua_getuservalue(L, 1);
 
+	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
+
 	lua_rawgeti(L, -1, index+1);
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 	} else {
+		struct sprite * c = lua_touserdata(L, -1);
+		if (c == child) {
+			// mount not change
+			return 0;
+		}
 		// try to remove parent ref
 		lua_getuservalue(L, -1);
 		if (lua_istable(L, -1)) {
@@ -733,14 +745,13 @@ lmount(lua_State *L) {
 		lua_pop(L, 2);
 	}
 
-	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			unlink_parent(L, name, 3);
+			unlink_parent(L, child, 3);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
@@ -825,6 +836,15 @@ lset_anchor_particle(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANCHOR)
 		return luaL_error(L, "need a anchor");
+
+	// ref the ps object and pic to anchor object
+	get_reftable(L, 1);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, -2, 0);
+	lua_pushvalue(L, 3);
+	lua_rawseti(L, -2, 1);
+	lua_pop(L, 1);
+
 	s->ps = (struct particle_system*)lua_touserdata(L, 2);
 	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
 	if (p==NULL)

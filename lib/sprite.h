@@ -34,7 +34,7 @@ struct sprite {
 		int scissor;
 		struct pack_picture *mask;  //for picture only
 	} data;
-	struct particle_system *ps;
+	struct particle_system *ps;	// todo: can ps move into union ?
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
@@ -54,6 +54,7 @@ struct sprite * sprite_test(struct sprite *, struct srt *srt, int x, int y);
 
 // return child index, -1 means not found
 int sprite_child(struct sprite *, const char * childname);
+int sprite_child_ptr(struct sprite *, struct sprite *child);
 // return sprite id in pack, -1 for end
 int sprite_component(struct sprite *, int index);
 const char * sprite_childname(struct sprite *, int index);
