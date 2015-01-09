@@ -128,6 +128,13 @@ function sprite.new(packname, name)
 	end
 end
 
+function sprite.direct_new(pack, id)
+	local cobj = c.new(pack,id)
+	if cobj then
+		return debug.setmetatable(cobj, sprite_meta)
+	end
+end
+
 function sprite.label(tbl)
 	local size = tbl.size or tbl.height - 2
 	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align))
