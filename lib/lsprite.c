@@ -1146,12 +1146,15 @@ ltest(lua_State *L) {
 	fill_srt(L,&srt,4);
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
-	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE);
+	int hit_x=0, hit_y=0;
+	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE, &hit_x, &hit_y);
 	if (m == NULL)
 		return 0;
 	if (m==s) {
 		lua_settop(L,1);
-		return 1;
+		lua_pushinteger(L, hit_x / SCREEN_SCALE);
+		lua_pushinteger(L, hit_y / SCREEN_SCALE);
+		return 3;
 	}
 	lua_settop(L,1);
 	int depth = unwind(L, s , m);
@@ -1168,8 +1171,10 @@ ltest(lua_State *L) {
 		}
 		lua_replace(L, -2);
 	}
-
-	return 1;
+	
+	lua_pushinteger(L, hit_x / SCREEN_SCALE);
+	lua_pushinteger(L, hit_y / SCREEN_SCALE);
+	return 3;
 }
 
 static int

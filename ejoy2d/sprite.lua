@@ -101,9 +101,9 @@ end
 
 -- local function
 function test(...)
-	local cobj = method_test(...)
+	local cobj, x, y = method_test(...)
 	if cobj then
-		return debug.setmetatable(cobj, sprite_meta)
+		return debug.setmetatable(cobj, sprite_meta), x, y
 	end
 end
 
