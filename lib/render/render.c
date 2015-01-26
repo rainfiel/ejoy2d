@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
@@ -503,7 +504,7 @@ apply_vb(struct render *R) {
 				stride = buf->stride;
 			}
 			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (void *)(al->offset));
+			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 		}
 	}
 
