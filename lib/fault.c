@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "ejoy2d.h"
 #include "platform_print.h"
 
-void
+EJOY_API void
 fault(const char * format, ...) {
 	if (format[0] == '!') {
 		va_list ap;
