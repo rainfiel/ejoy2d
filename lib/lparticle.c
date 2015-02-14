@@ -152,7 +152,7 @@ lupdate(lua_State *L) {
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	float dt = luaL_checknumber(L,2);
 	struct matrix *anchor = (struct matrix*)lua_touserdata(L, 3);
-	int edge = luaL_checkinteger(L, 4);
+	int edge = (int)luaL_checkinteger(L, 4);
 
 /*	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
 		struct matrix *m = (struct matrix *)lua_touserdata(L, 3);

@@ -360,7 +360,7 @@ static void
 draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
           uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
-		float cx;
+		float cx = 0.0;
     int j;
     int size = l->size;
     if (l->auto_scale != 0 && w > l->width)
