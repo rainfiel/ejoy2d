@@ -505,11 +505,11 @@ lsettext(lua_State *L) {
 	rich->text = txt;
   rich->count = cnt;
 	lua_rawgeti(L, 2, 3);
-	rich->width = luaL_checkinteger(L, -1);
+	rich->width = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	lua_rawgeti(L, 2, 4);
-	rich->height = luaL_checkinteger(L, -1);
+	rich->height = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	int size = cnt * sizeof(struct label_field);
@@ -525,23 +525,23 @@ lsettext(lua_State *L) {
 		}
 
 		lua_rawgeti(L, -1, 1);  //start
-		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->start = (uint32_t)luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
 
     lua_rawgeti(L, -1, 2);  //end
-		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->end = (uint32_t)luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
-		uint32_t type = luaL_checkinteger(L, -1);
+		uint32_t type = (uint32_t)luaL_checkinteger(L, -1);
 		((struct label_field*)(fields+i))->type = type;
 		lua_pop(L, 1);
 		
 		lua_rawgeti(L, -1, 4); //val
 		if (type == RL_COLOR) {
-			((struct label_field*)(fields+i))->color = luaL_checkinteger(L, -1);
+			((struct label_field*)(fields+i))->color = (uint32_t)luaL_checkinteger(L, -1);
 		} else {
-			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+			((struct label_field*)(fields+i))->val = (int)luaL_checkinteger(L, -1);
 		}
 		lua_pop(L, 1);
 
@@ -603,7 +603,7 @@ lgetcolor(lua_State *L) {
 static int
 lsetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t color = luaL_checkinteger(L,2);
+	uint32_t color = (uint32_t)luaL_checkinteger(L,2);
 	s->t.color = color;
 	return 0;
 }
@@ -611,7 +611,7 @@ lsetcolor(lua_State *L) {
 static int
 lsetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	uint8_t alpha = luaL_checkinteger(L, 2);
+	uint8_t alpha = (uint8_t)luaL_checkinteger(L, 2);
 	s->t.color = (s->t.color & 0x00ffffff) | (alpha << 24);
 	return 0;
 }
@@ -633,7 +633,7 @@ lgetadditive(lua_State *L) {
 static int
 lsetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t additive = luaL_checkinteger(L,2);
+	uint32_t additive = (uint32_t)luaL_checkinteger(L,2);
 	s->t.additive = additive;
 	return 0;
 }
@@ -1451,10 +1451,10 @@ get_dfont(lua_State *L) {
 
 static int
 lnewdfont(lua_State *L) {
-	int width = luaL_checkinteger(L, 1);
-	int height = luaL_checkinteger(L, 2);
-	int format = luaL_checkinteger(L, 3);
-	int id = luaL_checkinteger(L, 4);
+	int width = (int)luaL_checkinteger(L, 1);
+	int height = (int)luaL_checkinteger(L, 2);
+	int format = (int)luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 4);
 	
 	lua_createtable(L, 0, 1);
 	size_t size = dfont_data_size(width, height);
@@ -1483,7 +1483,7 @@ ldeldfont(lua_State *L) {
 	}
 
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkinteger(L, -1);
+	int tid = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	texture_unload(tid);
@@ -1509,8 +1509,8 @@ ldfont_lookup(lua_State *L) {
 		return luaL_error(L, "invalid dfont table");
 	}
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
 	
 	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
 	
@@ -1532,8 +1532,8 @@ ldfont_remove(lua_State *L) {
 		return luaL_error(L, "invalid dfont table");
 	}
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
 	dfont_remove(df, id, rect_size, 0);
 	
 	return 0;
@@ -1547,14 +1547,14 @@ ldfont_insert(lua_State *L) {
 	}
 	
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkinteger(L, -1);
+	int tid = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	RID tex = texture_glid(tid);
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
-	int w = luaL_checkinteger(L, 4);
-	int h = luaL_checkinteger(L, 5);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
+	int w = (int)luaL_checkinteger(L, 4);
+	int h = (int)luaL_checkinteger(L, 5);
 	void* buff = lua_touserdata(L, 6);
 	
 	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
