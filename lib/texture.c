@@ -261,3 +261,20 @@ texture_update(int id, int pixel_width, int pixel_height, void *data) {
 	return NULL;
 }
 
+const char*
+texture_sub_update(int id, int x, int y, int width, int height, void *data) {
+	if (id >= MAX_TEXTURE) {
+		return "Too many texture";
+	}
+
+	if(data == NULL){
+		return "no content";
+	}
+	struct texture * tex = &POOL.tex[id];
+	if(tex->id == 0){
+		return "not a valid texture";
+	}
+	render_texture_subupdate(R, tex->id, data, x, y, width, height);
+
+	return NULL;
+}
