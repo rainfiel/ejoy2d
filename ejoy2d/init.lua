@@ -20,8 +20,8 @@ local gesture = {
 	"PAN",
 	"TAP",
 	"PINCH",
-    "PRESS",
-    "DOUBLE_TAP",
+	"PRESS",
+	"DOUBLE_TAP",
 }
 
 function ejoy2d.start(callback)
@@ -35,9 +35,13 @@ function ejoy2d.start(callback)
 		return callback.gesture(gesture[what], x1, y1, x2, y2, state)
 	end
 	fw.EJOY2D_MESSAGE = assert(callback.message)
-  	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
-  	fw.EJOY2D_RESUME = assert(callback.on_resume)
-		fw.EJOY2D_PAUSE = assert(callback.on_pause)
+	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
+	fw.EJOY2D_RESUME = assert(callback.on_resume)
+	fw.EJOY2D_PAUSE = assert(callback.on_pause)
+
+	--optional callbacks
+	fw.EJOY2D_VIEW_LAYOUT = callback.view_layout
+
 	fw.inject()
 end
 
