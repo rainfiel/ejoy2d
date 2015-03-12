@@ -29,6 +29,9 @@
 #define EJOY_RESUME "EJOY2D_RESUME"
 #define EJOY_PAUSE "EJOY2D_PAUSE"
 
+//optional functions
+#define EJOY_VIEW_LAYOUT "EJOY2D_VIEW_LAYOUT"
+
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
 #define DRAWFRAME_FUNCTION 3
@@ -64,6 +67,17 @@ linject(lua_State *L) {
 		}
 		lua_setfield(L, LUA_REGISTRYINDEX, ejoy_callback[i]);
 	}
+	
+	static const char * optional_callback[] = {
+		EJOY_VIEW_LAYOUT,
+	};
+	for (i=0;i<sizeof(optional_callback)/sizeof(optional_callback[0]);i++) {
+		lua_getfield(L, lua_upvalueindex(1), optional_callback[i]);
+		if (lua_isfunction(L,-1)) {
+			lua_setfield(L, LUA_REGISTRYINDEX, optional_callback[i]);
+		}
+	}
+	
 	return 0;
 }
 
@@ -349,6 +363,21 @@ ejoy2d_game_pause(struct game* G) {
 	lua_State *L = G->L;
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_PAUSE);
 	call(L, 0, 0);
+	lua_settop(L, TOP_FUNCTION);
+}
+
+void
+ejoy2d_game_view_layout(struct game* G, int stat, int x, int y, int width, int height) {
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_VIEW_LAYOUT);
+	if (lua_isfunction(L, -1)) {
+		lua_pushinteger(L, stat);
+		lua_pushinteger(L, x);
+		lua_pushinteger(L, y);
+		lua_pushinteger(L, width);
+		lua_pushinteger(L, height);
+		call(L, 5, 0);
+	}
 	lua_settop(L, TOP_FUNCTION);
 }
 
