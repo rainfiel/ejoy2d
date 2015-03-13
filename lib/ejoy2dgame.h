@@ -27,7 +27,7 @@ EJOY_API void ejoy2d_game_gesture(struct game *, int type,
 EJOY_API void ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data, lua_Number n);
 EJOY_API void ejoy2d_game_pause(struct game* G);
 EJOY_API void ejoy2d_game_resume(struct game* G);
-EJOY_API void ejoy2d_game_view_layout(struct game* G, int stat, int x, int y, int width, int height);
+EJOY_API void ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width, float height);
 
 void
 ejoy2d_call_lua(lua_State *L, int n, int r);
