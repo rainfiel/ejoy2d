@@ -15,6 +15,7 @@
 #include "label.h"
 #include "particle.h"
 #include "lrenderbuffer.h"
+#include "screen.h"
 
 //#define LOGIC_FRAME 30
 
@@ -81,9 +82,19 @@ linject(lua_State *L) {
 }
 
 static int
+lreset_screen(lua_State *L) {
+	int w = (int)luaL_checkinteger(L, 1);
+	int h = (int)luaL_checkinteger(L, 2);
+	float scale = (float)luaL_checknumber(L, 3);
+	screen_init(w, h, scale);
+	return 0;
+}
+
+static int
 ejoy2d_framework(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "inject", linject },
+		{ "reset_screen", lreset_screen },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
@@ -358,15 +369,15 @@ ejoy2d_game_pause(struct game* G) {
 }
 
 void
-ejoy2d_game_view_layout(struct game* G, int stat, int x, int y, int width, int height) {
+ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width, float height) {
 	lua_State *L = G->L;
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_VIEW_LAYOUT);
 	if (lua_isfunction(L, -1)) {
 		lua_pushinteger(L, stat);
-		lua_pushinteger(L, x);
-		lua_pushinteger(L, y);
-		lua_pushinteger(L, width);
-		lua_pushinteger(L, height);
+		lua_pushnumber(L, x);
+		lua_pushnumber(L, y);
+		lua_pushnumber(L, width);
+		lua_pushnumber(L, height);
 		call(L, 5, 0);
 	}
 	lua_settop(L, TOP_FUNCTION);
