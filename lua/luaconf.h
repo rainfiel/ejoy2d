@@ -11,6 +11,9 @@
 #include <limits.h>
 #include <stddef.h>
 
+#ifdef LUA_PARSE_CH
+#define LUA_USE_CTYPE 0
+#endif
 
 /*
 ** ===================================================================
