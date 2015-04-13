@@ -376,4 +376,12 @@ function spritepack.query( packname, name )
 	return p.cobj, id
 end
 
+function spritepack.remove(name)
+	pack_pool[name] = nil
+end
+
+function spritepack.query_package(packname)
+	return pack_pool[packname]
+end
+
 return spritepack
