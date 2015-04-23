@@ -218,6 +218,36 @@ limport(lua_State *L) {
 	return 0;
 }
 
+//local position to world position
+static int
+lmul_point(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	double x = luaL_checknumber(L,2) * SCREEN_SCALE;
+	double y = luaL_checknumber(L,3) * SCREEN_SCALE;
+
+	matrix_mul_point(mat, &x, &y);
+
+	lua_pushnumber(L, x / SCREEN_SCALE);
+	lua_pushnumber(L, y / SCREEN_SCALE);
+	return 2;
+}
+
+//world position to local position
+static int
+linverse_mul_point(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	double x = luaL_checknumber(L,2) * SCREEN_SCALE;
+	double y = luaL_checknumber(L,3) * SCREEN_SCALE;
+
+	struct matrix inv;
+	matrix_inverse(mat, &inv);
+	matrix_mul_point(&inv, &x, &y);
+
+	lua_pushnumber(L, x / SCREEN_SCALE);
+	lua_pushnumber(L, y / SCREEN_SCALE);
+	return 2;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -234,6 +264,8 @@ ejoy2d_matrix(lua_State *L) {
 		{ "identity", lidentity},
 		{ "export", lexport },
 		{ "import", limport },
+		{ "mul_point", lmul_point },
+		{ "inverse_mul_point", linverse_mul_point },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
