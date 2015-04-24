@@ -1056,12 +1056,57 @@ lmatrix_multi_draw(lua_State *L) {
 }
 
 static int
+lmulti_draw_test(lua_State *L) {
+	struct sprite *s = self(L);
+	int cnt = (int)luaL_checkinteger(L,3);
+	if (cnt == 0)
+		return 0;
+	luaL_checktype(L,4,LUA_TTABLE);
+	if (lua_rawlen(L, 4) < cnt) {
+		return luaL_error(L, "matrix length less then fixed count");
+	}
+	float x = luaL_checknumber(L, 5);
+	float y = luaL_checknumber(L, 6);
+
+	struct srt srt;
+	fill_srt(L, &srt, 2);
+
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	struct matrix *parent_mat = s->t.mat;
+
+	int i;
+	int hit_x=0, hit_y=0;
+	struct sprite* touched = NULL;
+	for (i=0; i<cnt; i++) {
+		lua_rawgeti(L, 4, i+1);
+		s->t.mat = (struct matrix *)lua_touserdata(L, -1);
+		lua_pop(L, 1);
+
+		touched = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE, &hit_x, &hit_y);
+		if (touched) break;
+	}
+
+	s->t.mat = parent_mat;
+
+	if (touched){
+		lua_settop(L,1);
+		lua_pushinteger(L, hit_x / SCREEN_SCALE);
+		lua_pushinteger(L, hit_y / SCREEN_SCALE);
+		return 3;
+	}
+	return 0;
+}
+
+static int
 lmulti_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
 	if (cnt == 0)
 		return 0;
-    int n = lua_gettop(L);
+	int n = lua_gettop(L);
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
@@ -1342,6 +1387,7 @@ lmethod(lua_State *L) {
 		{ "draw", ldraw },
 		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
+		{ "multi_draw_test", lmulti_draw_test },
 		{ "matrix_multi_draw", lmatrix_multi_draw },
 		{ "test", ltest },
 		{ "aabb", laabb },
