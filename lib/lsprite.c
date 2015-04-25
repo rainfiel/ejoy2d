@@ -1093,9 +1093,8 @@ lmulti_draw_test(lua_State *L) {
 
 	if (touched){
 		lua_settop(L,1);
-		lua_pushinteger(L, hit_x / SCREEN_SCALE);
-		lua_pushinteger(L, hit_y / SCREEN_SCALE);
-		return 3;
+		lua_pushinteger(L, i);
+		return 2;
 	}
 	return 0;
 }
