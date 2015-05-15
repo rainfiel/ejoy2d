@@ -1,4 +1,5 @@
 
+local floor = math.floor
 
 --------------------helpers--------------------
 function string.char_len(str)
@@ -189,11 +190,14 @@ function M:_locate_alnum(sizes, anchor)
 end
 
 local function add_linefeed(fields, pos, offset)
+	offset = offset or 1000
+	offset = floor(offset)
 	local field = {false, false, false, false}
 	field[1] = pos-1  --zero base index
 	field[2] = pos-1
 	field[3] = CTL_CODE_LINEFEED
-	field[4] = offset or 1000
+	field[4] = offset
+
 	-- field[4] = 1000
 	table.insert(fields, field)
 end
