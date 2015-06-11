@@ -137,7 +137,7 @@ end
 
 function sprite.label(tbl)
 	local size = tbl.size or tbl.height - 2
-	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align, tbl.edge))
+	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align, tbl.space_w or 0, tbl.space_h or 0, tbl.auto_scale or 0, tbl.edge))
 	if l then
 		l = debug.setmetatable(l, sprite_meta)
 		if tbl.text then
