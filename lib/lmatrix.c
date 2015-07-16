@@ -1,6 +1,7 @@
 #include "lmatrix.h"
 #include "matrix.h"
 #include "spritepack.h"
+#include "lutls.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -248,6 +249,15 @@ linverse_mul_point(lua_State *L) {
 	return 2;
 }
 
+static int
+lapply_srt(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	struct srt srt;
+	fill_srt(L, &srt, 2);
+	matrix_srt(mat, &srt);
+	return 0;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -269,5 +279,18 @@ ejoy2d_matrix(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
+
+	int i;
+	int nk = sizeof(srt_key)/sizeof(srt_key[0]);
+	for (i=0;i<nk;i++) {
+		lua_pushstring(L, srt_key[i]);
+	}
+
+	luaL_Reg l2[] = {
+		{ "apply_srt", lapply_srt },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, l2, nk);
+
 	return 1;
 }
