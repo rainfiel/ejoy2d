@@ -1,5 +1,4 @@
 #include "lutls.h"
-#include "matrix.h"
 #include "spritepack.h"
 
 #define SRT_X 1

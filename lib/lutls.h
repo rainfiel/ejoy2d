@@ -1,6 +1,7 @@
 #ifndef EJOY_2D_LUTLS_H
 #define EJOY_2D_LUTLS_H
 
+#include "matrix.h"
 #include <lauxlib.h>
 
 static const char * srt_key[] = {
