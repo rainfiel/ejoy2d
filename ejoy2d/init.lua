@@ -24,6 +24,17 @@ local gesture = {
 	"DOUBLE_TAP",
 }
 
+function ejoy2d.random_generator(seed)
+	local generator = {__seed=seed,__seq=0, random=function(self, ...)
+		local r, s=fw.random(self.__seed, ...)
+		self.__seed = s
+		self.__seq = self.__seq + 1
+		return r
+	end}
+	generator:random()
+	return generator
+end
+
 function ejoy2d.start(callback)
 	fw.EJOY2D_UPDATE = assert(callback.update)
 	fw.EJOY2D_DRAWFRAME = assert(callback.drawframe)

@@ -91,11 +91,57 @@ lreset_screen(lua_State *L) {
 	return 0;
 }
 
+inline static float
+RANDOM_M11(unsigned int *seed) {
+	*seed = *seed * 134775813 + 1;
+	union {
+		uint32_t d;
+		float f;
+	} u;
+	u.d = (((uint32_t)(*seed) & 0x7fff) << 8) | 0x40000000;
+	return (u.f - 2.0f) / 2;
+}
+
+static int
+lrandom(lua_State *L){
+	lua_Integer low, up;
+	
+	unsigned int seed = (unsigned int)luaL_checkinteger(L, 1);
+  double r = (double)RANDOM_M11(&seed);
+  switch (lua_gettop(L)) {  /* check number of arguments */
+    case 1: {  /* no arguments */
+      lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */
+			lua_pushinteger(L, seed);
+      return 2;
+    }
+    case 2: {  /* only upper limit */
+      low = 1;
+      up = luaL_checkinteger(L, 2);
+      break;
+    }
+    case 3: {  /* lower and upper limits */
+      low = luaL_checkinteger(L, 2);
+      up = luaL_checkinteger(L, 3);
+      break;
+    }
+    default: return luaL_error(L, "wrong number of arguments");
+  }
+  /* random integer in the interval [low, up] */
+  luaL_argcheck(L, low <= up, 1, "interval is empty"); 
+  luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
+                   "interval too large");
+  r *= (double)(up - low) + 1.0;
+  lua_pushinteger(L, (lua_Integer)r + low);
+	lua_pushinteger(L, seed);
+  return 2;
+}
+
 static int
 ejoy2d_framework(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "inject", linject },
 		{ "reset_screen", lreset_screen },
+		{ "random", lrandom },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
@@ -391,4 +437,3 @@ ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width,
 	}
 	lua_settop(L, TOP_FUNCTION);
 }
-
