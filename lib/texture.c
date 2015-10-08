@@ -135,6 +135,11 @@ texture_reset_rt() {
 	render_set(R, TARGET, 0, 0);
 }
 
+void
+read_rt_pixels(int width, int height, void* buf) {
+	render_read_pixels(R, width, height, TEXTURE_RGBA8, buf);
+}
+
 int
 texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v) {
 	if (id < 0 || id >= POOL.count) {

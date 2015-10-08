@@ -15,6 +15,7 @@ void texture_exit();
 const char* texture_new_rt(int id, int width, int height);
 const char* texture_active_rt(int id);
 void texture_reset_rt();
+void read_rt_pixels(int width, int height, void* buf);
 
 void texture_set_inv(int id, float invw, float invh);
 void texture_swap(int ida, int idb);
