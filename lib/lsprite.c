@@ -39,9 +39,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = true;
-	s->multimount = false;
+	s->flags = 0;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_LABEL;
@@ -69,11 +67,11 @@ lnewlabel(lua_State *L) {
 	label.height = (int)luaL_checkinteger(L,2);
 	label.size = (int)luaL_checkinteger(L,3);
 	label.color = (uint32_t)luaL_optinteger(L,4,0xffffffff);
+	const char * align = lua_tostring(L,5);
 	label.space_w = (int)lua_tointeger(L, 6);
 	label.space_h = (int)lua_tointeger(L, 7);
 	label.auto_scale = (int)lua_tointeger(L, 8);
 	label.edge = (int)lua_tointeger(L, 9);
-	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
 	} else {
@@ -108,7 +106,7 @@ update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int c
 	int i = 0;
 	for (; i < pframe.n; i++) {
 		if (pframe.part[i].component_id == componentid && pframe.part[i].touchable) {
-			s->message = true;
+			s->flags |= SPRFLAG_MESSAGE;
 			return;
 		}
 	}
@@ -123,9 +121,7 @@ newanchor(lua_State *L) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = false;	// anchor is invisible by default
-	s->multimount = false;
+	s->flags = SPRFLAG_INVISIBLE;  // anchor is invisible by default
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
@@ -251,28 +247,54 @@ lgettotalframe(lua_State *L) {
 static int
 lgetvisible(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushboolean(L, s->visible);
+	lua_pushboolean(L, (s->flags & SPRFLAG_INVISIBLE) == 0);
 	return 1;
 }
 
 static int
 lsetvisible(lua_State *L) {
 	struct sprite *s = self(L);
-	s->visible = lua_toboolean(L, 2);
+	if (lua_toboolean(L, 2)) {
+		s->flags &= ~SPRFLAG_INVISIBLE;
+	} else {
+		s->flags |= SPRFLAG_INVISIBLE;
+	}
 	return 0;
 }
 
 static int
 lgetmessage(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushboolean(L, s->message);
+	lua_pushboolean(L, s->flags & SPRFLAG_MESSAGE);
 	return 1;
 }
 
 static int
 lsetmessage(lua_State *L) {
 	struct sprite *s = self(L);
-	s->message = lua_toboolean(L, 2);
+	if(lua_toboolean(L, 2)) {
+		s->flags |= SPRFLAG_MESSAGE;
+	} else {
+		s->flags &= ~SPRFLAG_MESSAGE;
+	}
+	return 0;
+}
+
+static int
+lget_force_inherit_frame(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushboolean(L, s->flags & SPRFLAG_FORCE_INHERIT_FRAME);
+	return 1;
+}
+
+static int
+lset_force_inherit_frame(lua_State *L) {
+	struct sprite *s = self(L);
+	if(lua_toboolean(L, 2)) {
+		s->flags |= SPRFLAG_FORCE_INHERIT_FRAME;
+	} else {
+		s->flags &= ~SPRFLAG_FORCE_INHERIT_FRAME;
+	}
 	return 0;
 }
 
@@ -654,6 +676,7 @@ lgetter(lua_State *L) {
 		{"alpha", lgetalpha },
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
+		{"force_inherit_frame", lget_force_inherit_frame },
 		{"matrix", lgetmat },
 		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
@@ -680,6 +703,7 @@ lsetter(lua_State *L) {
 		{"alpha", lsetalpha},
 		{"additive", lsetadditive },
 		{"message", lsetmessage },
+		{"force_inherit_frame", lset_force_inherit_frame },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
         {"auto_scale", lsetautoscale},
@@ -713,7 +737,7 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	if (!s->multimount)	{ // multimount has no parent
+	if ((s->flags & SPRFLAG_MULTIMOUNT) == 0)	{ // multimount has no parent
 		fetch_parent(L, index);
 	}
 
@@ -777,7 +801,7 @@ lmount(lua_State *L) {
 			// mount not change
 			return 0;
 		}
-		if (!c->multimount) {
+		if ((c->flags & SPRFLAG_MULTIMOUNT) == 0) {
 			// try to remove parent ref
 			lua_getuservalue(L, -1);
 			if (lua_istable(L, -1)) {
@@ -802,7 +826,7 @@ lmount(lua_State *L) {
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
 
-		if (!child->multimount)	{ // multimount has no parent
+		if ((child->flags & SPRFLAG_MULTIMOUNT) == 0)	{ // multimount has no parent
 			// set child's new parent
 			ref_parent(L, 3, 1);
 		}
@@ -1245,7 +1269,7 @@ lsr(lua_State *L) {
 	switch (n) {
 	case 4:
 		// sx,sy,rot
-		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,4) * (EJMAT_R_FACTOR / 360.0);
 		// go through
 	case 3:
 		// sx, sy
@@ -1254,7 +1278,7 @@ lsr(lua_State *L) {
 		break;
 	case 2:
 		// rot
-		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,2) * (EJMAT_R_FACTOR / 360.0);
 		break;
 	}
 	matrix_sr(m, sx, sy, r);
@@ -1401,9 +1425,7 @@ lnewproxy(lua_State *L) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = true;
-	s->multimount = true;
+	s->flags = SPRFLAG_MULTIMOUNT;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_ANIMATION;
@@ -1585,11 +1607,80 @@ ldfont_mothod(lua_State *L) {
 	luaL_newlib(L, l);
 }
 
+/*
+	string text
+	number x
+	number y
+	integer w
+	integer size
+	uinteger color
+	boolean edge
+	string align
+ */
+static int
+ldrawtext(lua_State *L) {
+	const char * str = luaL_checkstring(L, 1);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
+	struct pack_label pl;
+	pl.width = luaL_checkinteger(L, 4);
+	pl.size = luaL_checkinteger(L, 5);
+	pl.height = pl.size;
+	pl.color = luaL_optinteger(L, 6, 0xffffffff);
+	pl.space_h = 0;
+	pl.space_w = 0;
+	pl.auto_scale = 0;
+	pl.align = LABEL_ALIGN_CENTER;
+	pl.edge = lua_toboolean(L, 7);
+	const char *align = lua_tostring(L, 8);
+	if (align) {
+		switch(align[0]) {
+		case 'l': case 'L' :
+			pl.align = LABEL_ALIGN_LEFT;
+			break;
+		case 'r': case 'R' :
+			pl.align = LABEL_ALIGN_RIGHT;
+			break;
+		}
+	}
+	shader_program(pl.edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, NULL);
+	label_rawdraw(str, x,y, &pl);
+	return 0;
+}
+
+/*
+	string text
+	integer width
+	integer size
+	integer from (default 0)
+	boolean edge (default false)
+
+	return
+		integer n
+ */
+static int
+lsplittext(lua_State *L) {
+	size_t sz = 0;
+	const char * str = luaL_checklstring(L, 1, &sz);
+	struct pack_label pl;
+	pl.width = luaL_checkinteger(L, 2);
+	pl.size = luaL_checkinteger(L, 3);
+	int from = luaL_optinteger(L, 4, 0);
+	pl.edge = lua_toboolean(L, 5);
+	if (from < 0 || from >= sz)
+		return luaL_error(L, "invalid offset %d", from);
+	int n = label_rawline(str + from, &pl);
+	lua_pushinteger(L, n);
+	return 1;
+}
+
 int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
+		{ "drawtext", ldrawtext },
+		{ "splittext", lsplittext },
 		{ "proxy", lnewproxy },
 		{ "dfont", lnewdfont },
 		{ "delete_dfont", ldeldfont },

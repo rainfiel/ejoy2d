@@ -1,6 +1,3 @@
-This repository was moved to https://github.com/ejoy/ejoy2d .
-========
-
 EJOY 2D
 =======
 
@@ -27,9 +24,8 @@ For Linux ,
 
 For Mac OS ,
 
-* Install glew 1.9
+* Install glfw3
 * Install freetype 2
-* Install XQuartz
 * make or make macosx
 * ./ej2d examples/ex01.lua to test
 
