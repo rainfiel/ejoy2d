@@ -23,8 +23,9 @@ EJOY_API void ejoy2d_game_update(struct game *, float dt);
 EJOY_API void ejoy2d_game_drawframe(struct game *);
 EJOY_API int ejoy2d_game_touch(struct game *, int id, float x, float y, int status);
 EJOY_API void ejoy2d_game_gesture(struct game *, int type,
-                         double x1, double y1, double x2, double y2, int s);
+																	double x1, double y1, double x2, double y2, int s);
 EJOY_API void ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data, lua_Number n);
+void ejoy2d_game_message_l(lua_State* L,int id_, const char* state, const char* data, lua_Number n);
 EJOY_API void ejoy2d_game_pause(struct game* G);
 EJOY_API void ejoy2d_game_resume(struct game* G);
 EJOY_API void ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width, float height);

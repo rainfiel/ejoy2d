@@ -397,14 +397,26 @@ ejoy2d_game_gesture(struct game *G, int type,
 
 void
 ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data, lua_Number n) {
-  lua_State *L = G->L;
-  lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
-  lua_pushnumber(L, id_);
-  lua_pushstring(L, state);
-  lua_pushstring(L, data);
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
+	lua_pushnumber(L, id_);
+	lua_pushstring(L, state);
+	lua_pushstring(L, data);
 	lua_pushnumber(L, n);
-  call(L, 4, 0);
-  lua_settop(L, TOP_FUNCTION);
+	call(L, 4, 0);
+	lua_settop(L, TOP_FUNCTION);
+}
+
+
+void
+ejoy2d_game_message_l(lua_State* L, int id_, const char* state, const char* data, lua_Number n) {
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
+	lua_pushnumber(L, id_);
+	lua_pushstring(L, state);
+	lua_pushstring(L, data);
+	lua_pushnumber(L, n);
+	call(L, 4, 0);
+	lua_settop(L, TOP_FUNCTION);
 }
 
 void
