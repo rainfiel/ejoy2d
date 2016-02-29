@@ -32,6 +32,7 @@
 
 //optional functions
 #define EJOY_VIEW_LAYOUT "EJOY2D_VIEW_LAYOUT"
+#define EJOY_RELOAD "EJOY2D_RELOAD"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
@@ -71,6 +72,7 @@ linject(lua_State *L) {
 	
 	static const char * optional_callback[] = {
 		EJOY_VIEW_LAYOUT,
+		EJOY_RELOAD,
 	};
 	for (i=0;i<sizeof(optional_callback)/sizeof(optional_callback[0]);i++) {
 		lua_getfield(L, lua_upvalueindex(1), optional_callback[i]);
@@ -446,6 +448,16 @@ ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width,
 		lua_pushnumber(L, width);
 		lua_pushnumber(L, height);
 		call(L, 5, 0);
+	}
+	lua_settop(L, TOP_FUNCTION);
+}
+
+void
+ejoy2d_game_reload(struct game* G) {
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_RELOAD);
+	if (lua_isfunction(L, -1)) {
+		call(L, 0, 0);
 	}
 	lua_settop(L, TOP_FUNCTION);
 }

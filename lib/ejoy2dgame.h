@@ -29,6 +29,7 @@ void ejoy2d_game_message_l(lua_State* L,int id_, const char* state, const char* 
 EJOY_API void ejoy2d_game_pause(struct game* G);
 EJOY_API void ejoy2d_game_resume(struct game* G);
 EJOY_API void ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width, float height);
+EJOY_API void ejoy2d_game_reload(struct game *);
 
 void
 ejoy2d_call_lua(lua_State *L, int n, int r);

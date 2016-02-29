@@ -52,6 +52,7 @@ function ejoy2d.start(callback)
 
 	--optional callbacks
 	fw.EJOY2D_VIEW_LAYOUT = callback.view_layout
+	fw.EJOY2D_RELOAD = callback.on_reload
 
 	fw.inject()
 end
