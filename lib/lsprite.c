@@ -859,9 +859,12 @@ laabb(lua_State *L) {
 	struct srt srt;
 	fill_srt(L,&srt,2);
 	bool world = lua_toboolean(L, 3);
-	
+	bool ignore_flag = false;
+	if (!lua_isnil(L,4))
+		ignore_flag = lua_toboolean(L, 4);
+
 	int aabb[4];
-	sprite_aabb(s, &srt, world, aabb);
+	sprite_aabb(s, &srt, world, ignore_flag, aabb);
 	int i;
 	for (i=0;i<4;i++) {
 		lua_pushinteger(L, aabb[i]);

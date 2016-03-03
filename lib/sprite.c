@@ -795,9 +795,9 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 }
 
 void
-sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, int aabb[4]) {
+sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, bool ignore_flag, int aabb[4]) {
 	int i;
-	if ((s->flags & SPRFLAG_INVISIBLE) == 0) {
+	if ((s->flags & SPRFLAG_INVISIBLE) == 0 || ignore_flag != 0) {
 		struct matrix tmp;
 		if (world_aabb) {
 			sprite_matrix(s, &tmp);
