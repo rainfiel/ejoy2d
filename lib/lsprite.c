@@ -1265,6 +1265,51 @@ lps(lua_State *L) {
 }
 
 static int
+lps2(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int *mat = m->m;
+	int n = lua_gettop(L);
+	int x,y,scale;
+	switch (n) {
+	case 4:
+		// x,y,scale
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		scale = luaL_checknumber(L,4) * 1024;
+		mat[0] += scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] += scale;
+		mat[4] += x;
+		mat[5] += y;
+		break;
+	case 3:
+		// x,y
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		mat[4] += x;
+		mat[5] += y;
+		break;
+	case 2:
+		// scale
+		scale = luaL_checknumber(L,2) * 1024;
+		mat[0] += scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] += scale;
+		break;
+	default:
+		return luaL_error(L, "Invalid parm");
+	}
+	return 0;
+}
+
+static int
 lsr(lua_State *L) {
 	struct sprite *s = self(L);
 	struct matrix *m = &s->mat;
@@ -1366,6 +1411,7 @@ lmethod(lua_State *L) {
 	}
 	luaL_Reg l2[] = {
 		{ "ps", lps },
+		{ "ps2", lps2 },
 		{ "sr", lsr },
 		{ "draw", ldraw },
 		{ "recursion_frame", lrecursion_frame },
