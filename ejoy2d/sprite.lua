@@ -46,10 +46,13 @@ local set_text = set.text
 function set:text(txt)
 	if not txt or txt == "" then
 		set_text(self, nil)
+		self.usr_data.__text = nil
 	else
+		if self.usr_data.__text == txt then return end
 		local t = type(txt)
 		assert(t=="string" or t=="number")
 		set_text(self, richtext.format(self, tostring(txt)))
+		self.usr_data.__text = txt
 	end
 end
 
