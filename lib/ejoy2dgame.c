@@ -240,16 +240,20 @@ ejoy2d_game_lua(struct game *G) {
 }
 
 static int
-traceback (lua_State *L) {
+traceback(lua_State *L) {
 	const char *msg = lua_tostring(L, 1);
-	if (msg)
-		luaL_traceback(L, L, msg, 1);
-	else if (!lua_isnoneornil(L, 1)) {
-	if (!luaL_callmeta(L, 1, "__tostring"))
-		lua_pushliteral(L, "(no error message)");
+	if (msg == NULL) {
+	if (luaL_callmeta(L, 1, "__tostring") &&
+		lua_type(L, -1) == LUA_TSTRING)
+		return 1; 
+	else
+		msg = lua_pushfstring(L, "(error object is a %s value)",
+								luaL_typename(L, 1));
 	}
+	luaL_traceback(L, L, msg, 1); 
 	return 1;
 }
+
 
 void
 ejoy2d_game_logicframe(int frame)
@@ -277,6 +281,7 @@ ejoy2d_handle_error(lua_State *L, const char *err_type, const char *msg) {
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_HANDLE_ERROR);
 	lua_pushstring(L, err_type);
 	lua_pushstring(L, msg);
+//	assert(msg);
 	int err = lua_pcall(L, 2, 0, 0);
 	switch(err) {
 	case LUA_OK:
