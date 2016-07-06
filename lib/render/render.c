@@ -1114,3 +1114,12 @@ render_version(struct render *R) {
 	return OPENGLES;
 }
 
+void
+render_read_pixels(struct render *R, int width, int height, enum TEXTURE_FORMAT format, void* buf) {
+	GLint pf=0;
+	GLenum pt=0;
+	format_translate(format, &pf, &pt);
+	glReadPixels(0, 0, width, height, pf, pt, buf);
+	CHECK_GL_ERROR
+}
+

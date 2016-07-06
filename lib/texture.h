@@ -33,4 +33,6 @@ void texture_delete_framebuffer(int id);
 const char* texture_update(int id, int width, int height, void *buffer);
 const char* texture_sub_update(int id, int x, int y, int width, int height, void *buffer);
 
+void read_rt_pixels(int width, int height, void* buf);
+
 #endif

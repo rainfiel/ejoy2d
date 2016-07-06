@@ -395,3 +395,9 @@ texture_sub_update(int id, int x, int y, int width, int height, void *data) {
 
 	return NULL;
 }
+
+void
+read_rt_pixels(int width, int height, void* buf) {
+	render_read_pixels(R, width, height, TEXTURE_RGBA8, buf);
+}
+
