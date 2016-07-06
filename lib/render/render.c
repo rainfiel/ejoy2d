@@ -613,13 +613,12 @@ bind_texture(struct render *R, struct texture * tex, int slice, GLenum *type, in
 	glBindTexture( *type, tex->glid);
 }
 
-// return compressed
 static int
-texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
+format_translate(enum TEXTURE_FORMAT tex_format, GLint *pf, GLenum *pt) {
 	GLuint format = 0;
 	GLenum itype = 0;
 	int compressed = 0;
-	switch(tex->format) {
+	switch(tex_format) {
 	case TEXTURE_RGBA8 :
 		format = GL_RGBA;
 		itype = GL_UNSIGNED_BYTE;
@@ -670,6 +669,12 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 	*pf = format;
 	*pt = itype;
 	return compressed;
+}
+
+// return compressed
+static int
+texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
+	return format_translate(tex->format, pf, pt);
 }
 
 void
