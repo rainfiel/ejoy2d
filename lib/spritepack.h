@@ -4,6 +4,11 @@
 #include <lua.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 #ifdef UV_FLOAT
 typedef float uv_t;
 #else
