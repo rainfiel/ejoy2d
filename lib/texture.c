@@ -377,3 +377,21 @@ enum TEXTURE_FORMAT texture_format(int id) {
     return render_texture_format(R, tex->id);
 }
 
+
+const char*
+texture_sub_update(int id, int x, int y, int width, int height, void *data) {
+	if (id >= MAX_TEXTURE) {
+		return "Too many texture";
+	}
+
+	if(data == NULL){
+		return "no content";
+	}
+	struct texture * tex = &POOL.tex[id];
+	if(tex->id == 0){
+		return "not a valid texture";
+	}
+	render_texture_subupdate(R, tex->id, data, x, y, width, height);
+
+	return NULL;
+}
