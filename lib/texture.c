@@ -259,9 +259,9 @@ texture_update(int id, int pixel_width, int pixel_height, void *data) {
 		return "Too many texture";
 	}
 
-	if(data == NULL){
-		return "no content";
-	}
+//	if(data == NULL){
+//		return "no content";
+//	}
 	struct texture * tex = &POOL.tex[id];
 	if(tex->id == 0){
 		return "not a valid texture";

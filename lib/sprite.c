@@ -679,6 +679,31 @@ sprite_matrix(struct sprite * self, struct matrix *mat) {
 	}
 }
 
+void
+sprite_child_matrix(struct sprite * s, const char * childname, struct matrix *mat) {
+	struct sprite * parent = s->parent;
+	struct pack_animation *ani = s->s.ani;
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return;
+	}
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, parent->pack, ani->frame);
+	pf = &pf[frame];
+	int i;
+	for (i=0;i<pf->n;i++) {
+		struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, parent->pack, pf->part);
+		pp = &pp[i];
+		int index = pp->component_id;
+		struct sprite * child = s->data.children[index];
+		if (child->name && strcmp(childname, child->name) == 0) {
+			*mat = *OFFSET_TO_POINTER(struct matrix, parent->pack, pp->t.mat);
+			return;
+		}
+	}
+
+	matrix_identity(mat);
+}
+
 // aabb
 
 static void

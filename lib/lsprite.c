@@ -367,6 +367,22 @@ lgetwpos(lua_State *L) {
 }
 
 static int
+lchild_pos(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type == TYPE_ANIMATION) {
+		struct matrix tmp;
+		const char * name = luaL_checkstring(L,2);
+		sprite_child_matrix(s, name, &tmp);
+		lua_pushnumber(L,tmp.m[4] /(float)SCREEN_SCALE);
+		lua_pushnumber(L,tmp.m[5] /(float)SCREEN_SCALE);
+
+		return 2;
+	}
+
+	return 0;
+}
+
+static int
 lsetprogram(lua_State *L) {
 	struct sprite *s = self(L);
 	if (lua_isnoneornil(L,2)) {
@@ -1427,6 +1443,7 @@ lmethod(lua_State *L) {
 		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
+		{ "child_pos", lchild_pos },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
 		{ "calc_matrix", lcalc_matrix },

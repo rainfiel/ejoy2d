@@ -79,6 +79,7 @@ void sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, bool ignore
 int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);	// todo: maybe unused, use sprite_matrix instead
 // calc the sprite's world matrix
 void sprite_matrix(struct sprite *s, struct matrix *mat);
+void sprite_child_matrix(struct sprite * s, const char * childname, struct matrix *mat);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
 int material_size(int program);
