@@ -59,7 +59,8 @@ ldraw(lua_State *L) {
 		color = (uint32_t)lua_tointeger(L,3);
 	}
 	uint32_t additive = (uint32_t)luaL_optinteger(L,4,0);
-	shader_program(PROGRAM_PICTURE, NULL);
+	int program = (int)luaL_optinteger(L, 5, PROGRAM_PICTURE);
+	shader_program(program, NULL);
 	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
 	int point = n/4;
