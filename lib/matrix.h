@@ -36,6 +36,16 @@ matrix_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2
 }
 
 static inline void
+matrix_mul_point(struct matrix *mat, double* x, double* y) {
+	int *m = mat->m;
+	double xx = *x;
+	double yy = *y;
+	
+	*x = (xx * m[0] + yy * m[2])/1024 + m[4];
+	*y = (xx * m[1] + yy * m[3])/1024 + m[5];
+}
+
+static inline void
 matrix_identity(struct matrix *mm) {
 	int *mat = mm->m;
 	mat[0] = 1024;

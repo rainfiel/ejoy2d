@@ -132,6 +132,7 @@ void render_texture_subupdate(struct render *R, RID id, const void *pixels, int 
 RID render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMAT format);
 // render_release TARGET would not release the texture attachment
 RID render_target_texture(struct render *R, RID rt);
+void render_read_pixels(struct render *R, int width, int height, enum TEXTURE_FORMAT format, void* buf);
 
 RID render_shader_create(struct render *R, struct shader_init_args *args);
 void render_shader_bind(struct render *R, RID id);

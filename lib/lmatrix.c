@@ -1,6 +1,7 @@
 #include "lmatrix.h"
 #include "matrix.h"
 #include "spritepack.h"
+#include "lutls.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -218,6 +219,45 @@ limport(lua_State *L) {
 	return 0;
 }
 
+//local position to world position
+static int
+lmul_point(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	double x = luaL_checknumber(L,2) * SCREEN_SCALE;
+	double y = luaL_checknumber(L,3) * SCREEN_SCALE;
+
+	matrix_mul_point(mat, &x, &y);
+
+	lua_pushnumber(L, x / SCREEN_SCALE);
+	lua_pushnumber(L, y / SCREEN_SCALE);
+	return 2;
+}
+
+//world position to local position
+static int
+linverse_mul_point(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	double x = luaL_checknumber(L,2) * SCREEN_SCALE;
+	double y = luaL_checknumber(L,3) * SCREEN_SCALE;
+
+	struct matrix inv;
+	matrix_inverse(mat, &inv);
+	matrix_mul_point(&inv, &x, &y);
+
+	lua_pushnumber(L, x / SCREEN_SCALE);
+	lua_pushnumber(L, y / SCREEN_SCALE);
+	return 2;
+}
+
+static int
+lapply_srt(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	struct srt srt;
+	fill_srt(L, &srt, 2);
+	matrix_srt(mat, &srt);
+	return 0;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -234,8 +274,23 @@ ejoy2d_matrix(lua_State *L) {
 		{ "identity", lidentity},
 		{ "export", lexport },
 		{ "import", limport },
+		{ "mul_point", lmul_point },
+		{ "inverse_mul_point", linverse_mul_point },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
+
+	int i;
+	int nk = sizeof(srt_key)/sizeof(srt_key[0]);
+	for (i=0;i<nk;i++) {
+		lua_pushstring(L, srt_key[i]);
+	}
+
+	luaL_Reg l2[] = {
+		{ "apply_srt", lapply_srt },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, l2, nk);
+
 	return 1;
 }

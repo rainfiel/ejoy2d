@@ -46,10 +46,13 @@ local set_text = set.text
 function set:text(txt)
 	if not txt or txt == "" then
 		set_text(self, nil)
+		self.usr_data.__text = nil
 	else
+		if self.usr_data.__text == txt then return end
 		local t = type(txt)
 		assert(t=="string" or t=="number")
 		set_text(self, richtext.format(self, tostring(txt)))
+		self.usr_data.__text = txt
 	end
 end
 
@@ -102,9 +105,9 @@ end
 
 -- local function
 function test(...)
-	local cobj = method_test(...)
+	local cobj, x, y = method_test(...)
 	if cobj then
-		return debug.setmetatable(cobj, sprite_meta)
+		return debug.setmetatable(cobj, sprite_meta), x, y
 	end
 end
 
@@ -129,9 +132,16 @@ function sprite.new(packname, name)
 	end
 end
 
+function sprite.direct_new(pack, id)
+	local cobj = c.new(pack,id)
+	if cobj then
+		return debug.setmetatable(cobj, sprite_meta)
+	end
+end
+
 function sprite.label(tbl)
 	local size = tbl.size or tbl.height - 2
-	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align))
+	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align, tbl.space_w or 0, tbl.space_h or 0, tbl.auto_scale or 0, tbl.edge))
 	if l then
 		l = debug.setmetatable(l, sprite_meta)
 		if tbl.text then

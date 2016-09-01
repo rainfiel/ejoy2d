@@ -20,9 +20,20 @@ local gesture = {
 	"PAN",
 	"TAP",
 	"PINCH",
-    "PRESS",
-    "DOUBLE_TAP",
+	"PRESS",
+	"DOUBLE_TAP",
 }
+
+function ejoy2d.random_generator(seed)
+	local generator = {__seed=seed,__seq=0, random=function(self, ...)
+		local r, s=fw.random(self.__seed, ...)
+		self.__seed = s
+		self.__seq = self.__seq + 1
+		return r
+	end}
+	generator:random()
+	return generator
+end
 
 function ejoy2d.start(callback)
 	fw.EJOY2D_UPDATE = assert(callback.update)
@@ -35,9 +46,14 @@ function ejoy2d.start(callback)
 		return callback.gesture(gesture[what], x1, y1, x2, y2, state)
 	end
 	fw.EJOY2D_MESSAGE = assert(callback.message)
-  	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
-  	fw.EJOY2D_RESUME = assert(callback.on_resume)
-		fw.EJOY2D_PAUSE = assert(callback.on_pause)
+	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
+	fw.EJOY2D_RESUME = assert(callback.on_resume)
+	fw.EJOY2D_PAUSE = assert(callback.on_pause)
+
+	--optional callbacks
+	fw.EJOY2D_VIEW_LAYOUT = callback.view_layout
+	fw.EJOY2D_RELOAD = callback.on_reload
+
 	fw.inject()
 end
 

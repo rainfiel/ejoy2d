@@ -1,7 +1,7 @@
 #include "texture.h"
 #include "shader.h"
 
-#define MAX_TEXTURE 128
+#define MAX_TEXTURE 512
 
 struct texture {
 	int width;
@@ -130,6 +130,16 @@ texture_active_rt(int id) {
 	return NULL;
 }
 
+void
+texture_reset_rt() {
+	render_set(R, TARGET, 0, 0);
+}
+
+void
+read_rt_pixels(int width, int height, void* buf) {
+	render_read_pixels(R, width, height, TEXTURE_RGBA8, buf);
+}
+
 int
 texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v) {
 	if (id < 0 || id >= POOL.count) {
@@ -249,9 +259,9 @@ texture_update(int id, int pixel_width, int pixel_height, void *data) {
 		return "Too many texture";
 	}
 
-	if(data == NULL){
-		return "no content";
-	}
+//	if(data == NULL){
+//		return "no content";
+//	}
 	struct texture * tex = &POOL.tex[id];
 	if(tex->id == 0){
 		return "not a valid texture";
@@ -261,3 +271,20 @@ texture_update(int id, int pixel_width, int pixel_height, void *data) {
 	return NULL;
 }
 
+const char*
+texture_sub_update(int id, int x, int y, int width, int height, void *data) {
+	if (id >= MAX_TEXTURE) {
+		return "Too many texture";
+	}
+
+	if(data == NULL){
+		return "no content";
+	}
+	struct texture * tex = &POOL.tex[id];
+	if(tex->id == 0){
+		return "not a valid texture";
+	}
+	render_texture_subupdate(R, tex->id, data, x, y, width, height);
+
+	return NULL;
+}

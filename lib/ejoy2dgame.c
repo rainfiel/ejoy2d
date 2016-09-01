@@ -16,6 +16,7 @@
 #include "particle.h"
 #include "lrenderbuffer.h"
 #include "lgeometry.h"
+#include "screen.h"
 
 //#define LOGIC_FRAME 30
 
@@ -28,6 +29,10 @@
 #define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 #define EJOY_RESUME "EJOY2D_RESUME"
 #define EJOY_PAUSE "EJOY2D_PAUSE"
+
+//optional functions
+#define EJOY_VIEW_LAYOUT "EJOY2D_VIEW_LAYOUT"
+#define EJOY_RELOAD "EJOY2D_RELOAD"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
@@ -64,13 +69,81 @@ linject(lua_State *L) {
 		}
 		lua_setfield(L, LUA_REGISTRYINDEX, ejoy_callback[i]);
 	}
+	
+	static const char * optional_callback[] = {
+		EJOY_VIEW_LAYOUT,
+		EJOY_RELOAD,
+	};
+	for (i=0;i<sizeof(optional_callback)/sizeof(optional_callback[0]);i++) {
+		lua_getfield(L, lua_upvalueindex(1), optional_callback[i]);
+		if (lua_isfunction(L,-1)) {
+			lua_setfield(L, LUA_REGISTRYINDEX, optional_callback[i]);
+		}
+	}
+	
 	return 0;
+}
+
+static int
+lreset_screen(lua_State *L) {
+	int w = (int)luaL_checkinteger(L, 1);
+	int h = (int)luaL_checkinteger(L, 2);
+	float scale = (float)luaL_checknumber(L, 3);
+	screen_init(w, h, scale);
+	return 0;
+}
+
+inline static float
+RANDOM_M11(unsigned int *seed) {
+	*seed = *seed * 134775813 + 1;
+	union {
+		uint32_t d;
+		float f;
+	} u;
+	u.d = (((uint32_t)(*seed) & 0x7fff) << 8) | 0x40000000;
+	return (u.f - 2.0f) / 2;
+}
+
+static int
+lrandom(lua_State *L){
+	lua_Integer low, up;
+	
+	unsigned int seed = (unsigned int)luaL_checkinteger(L, 1);
+  double r = (double)RANDOM_M11(&seed);
+  switch (lua_gettop(L)) {  /* check number of arguments */
+    case 1: {  /* no arguments */
+      lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */
+			lua_pushinteger(L, seed);
+      return 2;
+    }
+    case 2: {  /* only upper limit */
+      low = 1;
+      up = luaL_checkinteger(L, 2);
+      break;
+    }
+    case 3: {  /* lower and upper limits */
+      low = luaL_checkinteger(L, 2);
+      up = luaL_checkinteger(L, 3);
+      break;
+    }
+    default: return luaL_error(L, "wrong number of arguments");
+  }
+  /* random integer in the interval [low, up] */
+  luaL_argcheck(L, low <= up, 1, "interval is empty"); 
+  luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
+                   "interval too large");
+  r *= (double)(up - low) + 1.0;
+  lua_pushinteger(L, (lua_Integer)r + low);
+	lua_pushinteger(L, seed);
+  return 2;
 }
 
 static int
 ejoy2d_framework(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "inject", linject },
+		{ "reset_screen", lreset_screen },
+		{ "random", lrandom },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
@@ -181,6 +254,7 @@ traceback(lua_State *L) {
 	return 1;
 }
 
+
 void
 ejoy2d_game_logicframe(int frame)
 {
@@ -207,6 +281,7 @@ ejoy2d_handle_error(lua_State *L, const char *err_type, const char *msg) {
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_HANDLE_ERROR);
 	lua_pushstring(L, err_type);
 	lua_pushstring(L, msg);
+//	assert(msg);
 	int err = lua_pcall(L, 2, 0, 0);
 	switch(err) {
 	case LUA_OK:
@@ -329,14 +404,26 @@ ejoy2d_game_gesture(struct game *G, int type,
 
 void
 ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data, lua_Number n) {
-  lua_State *L = G->L;
-  lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
-  lua_pushnumber(L, id_);
-  lua_pushstring(L, state);
-  lua_pushstring(L, data);
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
+	lua_pushnumber(L, id_);
+	lua_pushstring(L, state);
+	lua_pushstring(L, data);
 	lua_pushnumber(L, n);
-  call(L, 4, 0);
-  lua_settop(L, TOP_FUNCTION);
+	call(L, 4, 0);
+	lua_settop(L, TOP_FUNCTION);
+}
+
+
+void
+ejoy2d_game_message_l(lua_State* L, int id_, const char* state, const char* data, lua_Number n) {
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
+	lua_pushnumber(L, id_);
+	lua_pushstring(L, state);
+	lua_pushstring(L, data);
+	lua_pushnumber(L, n);
+	call(L, 4, 0);
+	lua_settop(L, TOP_FUNCTION);
 }
 
 void
@@ -355,3 +442,27 @@ ejoy2d_game_pause(struct game* G) {
 	lua_settop(L, TOP_FUNCTION);
 }
 
+void
+ejoy2d_game_view_layout(struct game* G, int stat, float x, float y, float width, float height) {
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_VIEW_LAYOUT);
+	if (lua_isfunction(L, -1)) {
+		lua_pushinteger(L, stat);
+		lua_pushnumber(L, x);
+		lua_pushnumber(L, y);
+		lua_pushnumber(L, width);
+		lua_pushnumber(L, height);
+		call(L, 5, 0);
+	}
+	lua_settop(L, TOP_FUNCTION);
+}
+
+void
+ejoy2d_game_reload(struct game* G) {
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_RELOAD);
+	if (lua_isfunction(L, -1)) {
+		call(L, 0, 0);
+	}
+	lua_settop(L, TOP_FUNCTION);
+}

@@ -7,6 +7,7 @@
 #include "dfont.h"
 #include "render.h"
 #include "texture.h"
+#include "lutls.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -95,54 +96,6 @@ lnewlabel(lua_State *L) {
 	newlabel(L, &label);
 	return 1;
 }
-
-static double
-readkey(lua_State *L, int idx, int key, double def) {
-	lua_pushvalue(L, lua_upvalueindex(key));
-	lua_rawget(L, idx);
-	double ret = luaL_optnumber(L, -1, def);
-	lua_pop(L,1);
-	return ret;
-}
-
-static void
-fill_srt(lua_State *L, struct srt *srt, int idx) {
-	if (lua_isnoneornil(L, idx)) {
-		srt->offx = 0;
-		srt->offy = 0;
-		srt->rot = 0;
-		srt->scalex = 1024;
-		srt->scaley = 1024;
-		return;
-	}
-	luaL_checktype(L,idx,LUA_TTABLE);
-	double x = readkey(L, idx, SRT_X, 0);
-	double y = readkey(L, idx, SRT_Y, 0);
-	double scale = readkey(L, idx, SRT_SCALE, 0);
-	double sx;
-	double sy;
-	double rot = readkey(L, idx, SRT_ROT, 0);
-	if (scale > 0) {
-		sx = sy = scale;
-	} else {
-		sx = readkey(L, idx, SRT_SX, 1);
-		sy = readkey(L, idx, SRT_SY, 1);
-	}
-	srt->offx = x*SCREEN_SCALE;
-	srt->offy = y*SCREEN_SCALE;
-	srt->scalex = sx*1024;
-	srt->scaley = sy*1024;
-	srt->rot = rot * (EJMAT_R_FACTOR / 360.0);
-}
-
-static const char * srt_key[] = {
-	"x",
-	"y",
-	"sx",
-	"sy",
-	"rot",
-	"scale",
-};
 
 static void
 update_message(struct sprite * s, struct sprite * parent, int componentid, int frame) {
@@ -414,6 +367,22 @@ lgetwpos(lua_State *L) {
 }
 
 static int
+lchild_pos(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type == TYPE_ANIMATION) {
+		struct matrix tmp;
+		const char * name = luaL_checkstring(L,2);
+		sprite_child_matrix(s, name, &tmp);
+		lua_pushnumber(L,tmp.m[4] /(float)SCREEN_SCALE);
+		lua_pushnumber(L,tmp.m[5] /(float)SCREEN_SCALE);
+
+		return 2;
+	}
+
+	return 0;
+}
+
+static int
 lsetprogram(lua_State *L) {
 	struct sprite *s = self(L);
 	if (lua_isnoneornil(L,2)) {
@@ -534,11 +503,11 @@ lsettext(lua_State *L) {
 	rich->text = txt;
   rich->count = cnt;
 	lua_rawgeti(L, 2, 3);
-	rich->width = luaL_checkinteger(L, -1);
+	rich->width = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	lua_rawgeti(L, 2, 4);
-	rich->height = luaL_checkinteger(L, -1);
+	rich->height = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	int size = cnt * sizeof(struct label_field);
@@ -554,23 +523,23 @@ lsettext(lua_State *L) {
 		}
 
 		lua_rawgeti(L, -1, 1);  //start
-		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->start = (uint32_t)luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
 
     lua_rawgeti(L, -1, 2);  //end
-		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->end = (uint32_t)luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
-		uint32_t type = luaL_checkinteger(L, -1);
+		uint32_t type = (uint32_t)luaL_checkinteger(L, -1);
 		((struct label_field*)(fields+i))->type = type;
 		lua_pop(L, 1);
 		
 		lua_rawgeti(L, -1, 4); //val
 		if (type == RL_COLOR) {
-			((struct label_field*)(fields+i))->color = luaL_checkinteger(L, -1);
+			((struct label_field*)(fields+i))->color = (uint32_t)luaL_checkinteger(L, -1);
 		} else {
-			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+			((struct label_field*)(fields+i))->val = (int)luaL_checkinteger(L, -1);
 		}
 		lua_pop(L, 1);
 
@@ -632,7 +601,7 @@ lgetcolor(lua_State *L) {
 static int
 lsetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t color = luaL_checkinteger(L,2);
+	uint32_t color = (uint32_t)luaL_checkinteger(L,2);
 	s->t.color = color;
 	return 0;
 }
@@ -640,7 +609,7 @@ lsetcolor(lua_State *L) {
 static int
 lsetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	uint8_t alpha = luaL_checkinteger(L, 2);
+	uint8_t alpha = (uint8_t)luaL_checkinteger(L, 2);
 	s->t.color = (s->t.color & 0x00ffffff) | (alpha << 24);
 	return 0;
 }
@@ -662,7 +631,7 @@ lgetadditive(lua_State *L) {
 static int
 lsetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t additive = luaL_checkinteger(L,2);
+	uint32_t additive = (uint32_t)luaL_checkinteger(L,2);
 	s->t.additive = additive;
 	return 0;
 }
@@ -909,9 +878,12 @@ laabb(lua_State *L) {
 	struct srt srt;
 	fill_srt(L,&srt,2);
 	bool world = lua_toboolean(L, 3);
-	
+	bool ignore_flag = false;
+	if (!lua_isnil(L,4))
+		ignore_flag = lua_toboolean(L, 4);
+
 	int aabb[4];
-	sprite_aabb(s, &srt, world, aabb);
+	sprite_aabb(s, &srt, world, ignore_flag, aabb);
 	int i;
 	for (i=0;i<4;i++) {
 		lua_pushinteger(L, aabb[i]);
@@ -1087,12 +1059,56 @@ lmatrix_multi_draw(lua_State *L) {
 }
 
 static int
+lmulti_draw_test(lua_State *L) {
+	struct sprite *s = self(L);
+	int cnt = (int)luaL_checkinteger(L,3);
+	if (cnt == 0)
+		return 0;
+	luaL_checktype(L,4,LUA_TTABLE);
+	if (lua_rawlen(L, 4) < cnt) {
+		return luaL_error(L, "matrix length less then fixed count");
+	}
+	float x = luaL_checknumber(L, 5);
+	float y = luaL_checknumber(L, 6);
+
+	struct srt srt;
+	fill_srt(L, &srt, 2);
+
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	struct matrix *parent_mat = s->t.mat;
+
+	int i;
+	int hit_x=0, hit_y=0;
+	struct sprite* touched = NULL;
+	for (i=0; i<cnt; i++) {
+		lua_rawgeti(L, 4, i+1);
+		s->t.mat = (struct matrix *)lua_touserdata(L, -1);
+		lua_pop(L, 1);
+
+		touched = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE, &hit_x, &hit_y);
+		if (touched) break;
+	}
+
+	s->t.mat = parent_mat;
+
+	if (touched){
+		lua_settop(L,1);
+		lua_pushinteger(L, i+1);
+		return 2;
+	}
+	return 0;
+}
+
+static int
 lmulti_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
 	if (cnt == 0)
 		return 0;
-    int n = lua_gettop(L);
+	int n = lua_gettop(L);
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
@@ -1191,12 +1207,15 @@ ltest(lua_State *L) {
 	fill_srt(L,&srt,4);
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
-	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE);
+	int hit_x=0, hit_y=0;
+	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE, &hit_x, &hit_y);
 	if (m == NULL)
 		return 0;
 	if (m==s) {
 		lua_settop(L,1);
-		return 1;
+		lua_pushinteger(L, hit_x / SCREEN_SCALE);
+		lua_pushinteger(L, hit_y / SCREEN_SCALE);
+		return 3;
 	}
 	lua_settop(L,1);
 	int depth = unwind(L, s , m);
@@ -1213,8 +1232,10 @@ ltest(lua_State *L) {
 		}
 		lua_replace(L, -2);
 	}
-
-	return 1;
+	
+	lua_pushinteger(L, hit_x / SCREEN_SCALE);
+	lua_pushinteger(L, hit_y / SCREEN_SCALE);
+	return 3;
 }
 
 static int
@@ -1255,6 +1276,51 @@ lps(lua_State *L) {
 		mat[1] = 0;
 		mat[2] = 0;
 		mat[3] = scale;
+		break;
+	default:
+		return luaL_error(L, "Invalid parm");
+	}
+	return 0;
+}
+
+static int
+lps2(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int *mat = m->m;
+	int n = lua_gettop(L);
+	int x,y,scale;
+	switch (n) {
+	case 4:
+		// x,y,scale
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		scale = luaL_checknumber(L,4) * 1024;
+		mat[0] += scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] += scale;
+		mat[4] += x;
+		mat[5] += y;
+		break;
+	case 3:
+		// x,y
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		mat[4] += x;
+		mat[5] += y;
+		break;
+	case 2:
+		// scale
+		scale = luaL_checknumber(L,2) * 1024;
+		mat[0] += scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] += scale;
 		break;
 	default:
 		return luaL_error(L, "Invalid parm");
@@ -1364,10 +1430,12 @@ lmethod(lua_State *L) {
 	}
 	luaL_Reg l2[] = {
 		{ "ps", lps },
+		{ "ps2", lps2 },
 		{ "sr", lsr },
 		{ "draw", ldraw },
 		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
+		{ "multi_draw_test", lmulti_draw_test },
 		{ "matrix_multi_draw", lmatrix_multi_draw },
 		{ "test", ltest },
 		{ "aabb", laabb },
@@ -1375,6 +1443,7 @@ lmethod(lua_State *L) {
 		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
+		{ "child_pos", lchild_pos },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
 		{ "calc_matrix", lcalc_matrix },
@@ -1493,10 +1562,10 @@ get_dfont(lua_State *L) {
 
 static int
 lnewdfont(lua_State *L) {
-	int width = luaL_checkinteger(L, 1);
-	int height = luaL_checkinteger(L, 2);
-	int format = luaL_checkinteger(L, 3);
-	int id = luaL_checkinteger(L, 4);
+	int width = (int)luaL_checkinteger(L, 1);
+	int height = (int)luaL_checkinteger(L, 2);
+	int format = (int)luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 4);
 	
 	lua_createtable(L, 0, 1);
 	size_t size = dfont_data_size(width, height);
@@ -1525,7 +1594,7 @@ ldeldfont(lua_State *L) {
 	}
 
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkinteger(L, -1);
+	int tid = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	texture_unload(tid);
@@ -1551,8 +1620,8 @@ ldfont_lookup(lua_State *L) {
 		return luaL_error(L, "invalid dfont table");
 	}
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
 	
 	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
 	
@@ -1574,8 +1643,8 @@ ldfont_remove(lua_State *L) {
 		return luaL_error(L, "invalid dfont table");
 	}
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
 	dfont_remove(df, id, rect_size, 0);
 	
 	return 0;
@@ -1589,14 +1658,14 @@ ldfont_insert(lua_State *L) {
 	}
 	
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkinteger(L, -1);
+	int tid = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	RID tex = texture_glid(tid);
 	
-	int id = luaL_checkinteger(L, 2);
-	int rect_size = luaL_checkinteger(L, 3);
-	int w = luaL_checkinteger(L, 4);
-	int h = luaL_checkinteger(L, 5);
+	int id = (int)luaL_checkinteger(L, 2);
+	int rect_size = (int)luaL_checkinteger(L, 3);
+	int w = (int)luaL_checkinteger(L, 4);
+	int h = (int)luaL_checkinteger(L, 5);
 	void* buff = lua_touserdata(L, 6);
 	
 	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);

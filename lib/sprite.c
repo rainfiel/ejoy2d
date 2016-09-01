@@ -679,6 +679,31 @@ sprite_matrix(struct sprite * self, struct matrix *mat) {
 	}
 }
 
+void
+sprite_child_matrix(struct sprite * s, const char * childname, struct matrix *mat) {
+	struct sprite * parent = s->parent;
+	struct pack_animation *ani = s->s.ani;
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return;
+	}
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, parent->pack, ani->frame);
+	pf = &pf[frame];
+	int i;
+	for (i=0;i<pf->n;i++) {
+		struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, parent->pack, pf->part);
+		pp = &pp[i];
+		int index = pp->component_id;
+		struct sprite * child = s->data.children[index];
+		if (child->name && strcmp(childname, child->name) == 0) {
+			*mat = *OFFSET_TO_POINTER(struct matrix, parent->pack, pp->t.mat);
+			return;
+		}
+	}
+
+	matrix_identity(mat);
+}
+
 // aabb
 
 static void
@@ -800,9 +825,9 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 }
 
 void
-sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, int aabb[4]) {
+sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, bool ignore_flag, int aabb[4]) {
 	int i;
-	if ((s->flags & SPRFLAG_INVISIBLE) == 0) {
+	if ((s->flags & SPRFLAG_INVISIBLE) == 0 || ignore_flag != 0) {
 		struct matrix tmp;
 		if (world_aabb) {
 			sprite_matrix(s, &tmp);
@@ -894,10 +919,10 @@ test_pannel(struct pack_pannel *pannel, int x, int y) {
 	return x>=0 && x<pannel->width && y>=0 && y<pannel->height;
 }
 
-static int test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch);
+static int test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch, int* hit_x, int* hit_y);
 
 static int
-check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_frame * pf, int i, int x, int y, struct sprite ** touch) {
+check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_frame * pf, int i, int x, int y, struct sprite ** touch, int* hit_x, int* hit_y) {
 	struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 	pp = &pp[i];
 	int index = pp->component_id;
@@ -908,7 +933,7 @@ check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_fr
 	struct matrix temp2;
 	struct matrix *ct = mat_mul(OFFSET_TO_POINTER(struct matrix, s->pack, pp->t.mat), t, &temp2);
 	struct sprite *tmp = NULL;
-	int testin = test_child(child, srt, ct, x, y, &tmp);
+	int testin = test_child(child, srt, ct, x, y, &tmp, hit_x, hit_y);
 	if (testin) {
 		// if child capture message, return it
 		*touch = tmp;
@@ -926,7 +951,7 @@ check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_fr
 		0 : test failed, but *touch capture the message
  */
 static int
-test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int y, struct sprite ** touch) {
+test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int y, struct sprite ** touch, int* hit_x, int* hit_y) {
 	struct pack_animation *ani = s->s.ani;
 	int frame = get_frame(s);
 	if (frame < 0) {
@@ -955,7 +980,7 @@ test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int 
 		}
 		if (scissor >=0) {
 			struct sprite *tmp = NULL;
-			check_child(s, srt, t, pf, scissor, x, y, &tmp);
+			check_child(s, srt, t, pf, scissor, x, y, &tmp, hit_x, hit_y);
 			if (tmp == NULL) {
 				start = scissor - 1;
 				continue;
@@ -964,7 +989,7 @@ test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int 
 			scissor = 0;
 		}
 		for (i=start;i>=scissor;i--) {
-			int hit = check_child(s, srt, t,  pf, i, x, y, touch);
+			int hit = check_child(s, srt, t,  pf, i, x, y, touch, hit_x, hit_y);
 			if (hit)
 				return 1;
 		}
@@ -974,12 +999,12 @@ test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int 
 }
 
 static int
-test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch) {
+test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch, int* hit_x, int* hit_y) {
 	struct matrix temp;
 	struct matrix *t = mat_mul(s->t.mat, ts, &temp);
 	if (s->type == TYPE_ANIMATION) {
 		struct sprite *tmp = NULL;
-		int testin = test_animation(s , srt, t, x,y, &tmp);
+		int testin = test_animation(s , srt, t, x,y, &tmp, hit_x, hit_y);
 		if (testin) {
 			*touch = tmp;
 			return 1;
@@ -1037,6 +1062,8 @@ test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, 
 
 	if (testin) {
 		*touch = tmp;
+		*hit_x = xx;
+		*hit_y = yy;
 		return s->flags & SPRFLAG_MESSAGE;
 	} else {
 		*touch = NULL;
@@ -1045,9 +1072,9 @@ test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, 
 }
 
 struct sprite *
-sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
+sprite_test(struct sprite *s, struct srt *srt, int x, int y, int* hit_x, int* hit_y) {
 	struct sprite *tmp = NULL;
-	int testin = test_child(s, srt, NULL, x, y, &tmp);
+	int testin = test_child(s, srt, NULL, x, y, &tmp, hit_x, hit_y);
 	if (testin) {
 		return tmp;
 	}

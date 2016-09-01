@@ -31,6 +31,10 @@ local function realname(filename)
 	return string.gsub(package_pattern,"([^?]*)?([^?]*)","%1"..filename.."%2")
 end
 
+function spack.add_package(packname, pack)
+	packages[packname] = pack
+end
+
 function spack.preload(packname)
 	if packages[packname] then
 		return packages[packname]

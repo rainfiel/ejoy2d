@@ -200,6 +200,50 @@ local function pack_animation(data, ret)
 	return size, max_id
 end
 
+function spritepack.pack_coc(filepath)
+	local ret = { texture = 0, maxid = 0, size = 0 , data = {}, export = {} }
+	local ani_maxid = 0
+
+	local function preprocess(data)
+		local id = assert(tonumber(data.id))
+		if id > ret.maxid then
+			ret.maxid = id
+		end
+		local exportname = data.export
+		if exportname then
+			assert(ret.export[exportname] == nil, "Duplicate export name"..exportname)
+			ret.export[exportname] = id
+		end
+		table.insert(ret.data, pack.word(id))
+	end
+
+	local env = {texture = function(count)
+		ret.texture = count
+	end, picture = function(data)
+		preprocess(data)
+		data[1].tex = data[1].tex+1
+		local sz, texid = pack_picture(data, ret.data)
+		ret.size = ret.size + sz
+	end, animation = function(data)
+		preprocess(data)
+		local sz , maxid = pack_animation(data, ret.data)
+		ret.size = ret.size + sz
+		if maxid > ani_maxid then
+			ani_maxid = maxid
+		end
+	end}
+
+	loadfile(filepath, "t", env)()
+
+	if ani_maxid > ret.maxid then
+		error ("Invalid id in animation ".. ani_maxid..":"..ret.maxid)
+	end
+
+	ret.data = table.concat(ret.data)
+	ret.size = ret.size + pack.pack_size(ret.maxid, ret.texture)
+	return ret
+end
+
 function spritepack.pack( data )
 	local ret = { texture = 0, maxid = 0, size = 0 , data = {}, export = {} }
 	local ani_maxid = 0
@@ -318,8 +362,12 @@ function spritepack.init( name, texture, meta )
 	return pack_pool[name]
 end
 
+function spritepack.alias(packname, aliasname)
+	pack_pool[aliasname] = pack_pool[packname]
+end
+
 function spritepack.query( packname, name )
-	local p = assert(pack_pool[packname], "Load package first")
+	local p = assert(pack_pool[packname], "Load package first "..packname)
 	local id
 	if type(name) == "number" then
 		id = name
@@ -330,6 +378,14 @@ function spritepack.query( packname, name )
 		error(string.format("'%s' is not exist in package %s", name, packname))
 	end
 	return p.cobj, id
+end
+
+function spritepack.remove(name)
+	pack_pool[name] = nil
+end
+
+function spritepack.query_package(packname)
+	return pack_pool[packname]
 end
 
 return spritepack
