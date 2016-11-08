@@ -318,10 +318,25 @@ draw_utf8(int unicode, float cx, int cy, int size, const struct srt *srt,
 static uint32_t
 get_rich_field_color(const struct rich_text *rich, int idx) {
   int i;
+	uint32_t color = 0;
   for (i=0;i<rich->count;i++) {
     struct label_field *field = (struct label_field*)(rich->fields+i);
+		if (idx < field->start) return color;
     if (idx >= field->start && idx <= field->end && field->type	== RL_COLOR) {
-      return field->color;
+      color = field->color;
+    }
+  }
+  return color;
+}
+
+static int
+get_rich_field_width(const struct rich_text *rich, int idx) {
+	int i;
+  for (i=0;i<rich->count;i++) {
+    struct label_field *field = (struct label_field*)(rich->fields+i);
+		if (idx < field->start) return 0;
+    if (idx == field->start && field->type	== RL_FIXED_WIDTH) {
+      return field->val;
     }
   }
   return 0;
@@ -400,6 +415,10 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 							field_color = color;
 						} else {
 							field_color = color_mul(field_color,  color | 0xffffff);
+						}
+						int fixed_width = get_rich_field_width(rich, *pre_char_cnt+char_cnt);
+						if (fixed_width > 0) {
+								cx = fixed_width;
 						}
             cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
         }

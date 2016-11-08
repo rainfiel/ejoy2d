@@ -1,5 +1,8 @@
 
 
+local symbol_template = "(#%[[%w|_]+%])"
+local tag_template = "([%w_]+)|([%w_]+)"
+
 --------------------helpers--------------------
 function string.char_len(str)
   local _, len = string.gsub(str, "[^\128-\193]", "")
@@ -7,7 +10,7 @@ function string.char_len(str)
 end
 
 function string.plain_format(str)
-  return string.gsub(str, "(#%[%w+%])", "")
+  return string.gsub(str, symbol_template, "")
 end
 
 local function is_ASCII_DBC_punct(unicode)
@@ -80,14 +83,21 @@ local gap = 4
 local CTL_CODE_POP=0
 local CTL_CODE_COLOR=1
 local CTL_CODE_LINEFEED=2
+local CTL_CODE_FIXED_WIDTH=3
+
+local is_block = {}
+is_block[CTL_CODE_COLOR] = true
+is_block[CTL_CODE_FIXED_WIDTH] = true
 
 local operates = {
-	yellow	={val=0xFFFFFF00,type="color"},
-	red			={val=0xFFFF0000,type="color"},
-	blue		={val=0xFF0000FF,type="color"},
-	green		={val=0xFF00FF00,type="color"},
-	stop			={type=CTL_CODE_POP},
-	lf 			={type=CTL_CODE_LINEFEED},
+	yellow				={val=0xFFFFFF00,type=CTL_CODE_COLOR},
+	red						={val=0xFFFF0000,type=CTL_CODE_COLOR},
+	blue					={val=0xFF0000FF,type=CTL_CODE_COLOR},
+	green					={val=0xFF00FF00,type=CTL_CODE_COLOR},
+	color 				={type=CTL_CODE_COLOR, val_fmt=tonumber},
+	fixed_width  	={type=CTL_CODE_FIXED_WIDTH, val_fmt = tonumber},
+	stop					={type=CTL_CODE_POP},
+	lf 						={type=CTL_CODE_LINEFEED},
 }
 local function init_operates(ops)
 	for k, v in pairs(ops) do
@@ -234,9 +244,10 @@ end
 
 local function format(label, txt)
 	local fields = {}
+	local blocks = {}
 	local pos_pieces = {}
 	local tag_cnt = 0
-	for match in string.gmatch(txt, "(#%[%w+%])") do
+	for match in string.gmatch(txt, symbol_template) do
 		tag_cnt = tag_cnt + 1
 	end
 	if tag_cnt == 0 then
@@ -247,10 +258,13 @@ local function format(label, txt)
 	local e=1
 	local pos_cnt = 0
 	for i=1, tag_cnt do
-		s, e = string.find(txt, "(#%[%w+%])")
+		s, e = string.find(txt, symbol_template)
 		local tag = string.sub(txt, s+2, e-1)
-		if not operates[tag] then
-			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+		local _tag, _val = string.match(tag, tag_template)
+		if not _tag then _tag = tag end
+
+		if not operates[_tag] then
+			txt = string.gsub(txt, symbol_template, "", 1)
 		else
 			local pos = string.char_len(string.sub(txt, 1, s))
 			pos_cnt = pos_cnt+1
@@ -259,44 +273,66 @@ local function format(label, txt)
 			pos_cnt = pos_cnt+1
 			pos_pieces[pos_cnt] = tag
 
-			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+			txt = string.gsub(txt, symbol_template, "", 1)
 		end
 	end
 
+	local txt_len = string.char_len(txt)
 	local count = pos_cnt / 2
 	local last_field = nil
 	for i=1, count do
 		local pos = pos_pieces[2*i-1]
 		local tag = pos_pieces[2*i]
+		local _tag, _val = string.match(tag, tag_template)
+		if _tag and _val then
+			tag = _tag
+		end
+
 		local ope = operates[tag]
-		if ope.type == "color" then
+		if not _val then
+			_val = ope.val
+		elseif ope.val_fmt then
+			_val = ope.val_fmt(_val)
+		end
+		local end_pos = i==count and txt_len or pos_pieces[2*(i+1)-1]-1
+
+		if ope.type == CTL_CODE_COLOR or ope.type == CTL_CODE_FIXED_WIDTH then
 			local field = {false, false, false, false}
 			field[1] = pos
-			field[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
-			field[3] = CTL_CODE_COLOR
-			field[4] = ope.val
+			field[2] = txt_len
+			field[3] = ope.type
+			field[4] = _val
 			table.insert(fields, field)
 
 			last_field = field
 		elseif ope.type == CTL_CODE_POP then
+			local block = blocks[#blocks]
+			if block then
+				blocks[#blocks] = nil
+				block[2] = pos-1
+			end
 			last_field = nil
 		elseif ope.type == CTL_CODE_LINEFEED then
 			local field = {false, false, false, false}
 			field[1] = pos
 			field[2] = pos
 			field[3] = ope.type
-			field[4] = ope.val
+			field[4] = _val
 			table.insert(fields, field)
 
 			if last_field then
 				local field_restore = {false, false, false}
 				field_restore[1] = pos
-				field_restore[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
+				field_restore[2] = txt_len
 				field_restore[3] = last_field[3]
 				field_restore[4] = last_field[4]
 				table.insert(fields, field_restore)
 				last_field = field_restore
 			end
+		end
+
+		if last_field and is_block[last_field[3]] then
+			table.insert(blocks, last_field)
 		end
 	end
 

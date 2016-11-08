@@ -10,6 +10,7 @@
 
 #define RL_COLOR 1
 #define RL_LINEFEED 2
+#define RL_FIXED_WIDTH 3
 
 struct label_field {
 	struct {
