@@ -258,6 +258,28 @@ lapply_srt(lua_State *L) {
 	return 0;
 }
 
+static int
+lget(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	int idx = (int)luaL_checkinteger(L,2);
+	if (!(idx >= 1 && idx <= 6))
+		return luaL_error(L, "out of range([1, 6]):%d", idx);
+
+	lua_pushinteger(L, mat->m[idx-1]);
+	return 1;
+}
+
+static int
+lset(lua_State *L) {
+	struct matrix *mat = (struct matrix*)lua_touserdata(L, 1);
+	int idx = (int)luaL_checkinteger(L, 2);
+	if (!(idx >= 1 && idx <= 6))
+		return luaL_error(L, "out of range([1, 6]):%d", idx);
+
+	mat->m[idx-1] = (int)luaL_checkinteger(L, 3);
+	return 0;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -276,6 +298,8 @@ ejoy2d_matrix(lua_State *L) {
 		{ "import", limport },
 		{ "mul_point", lmul_point },
 		{ "inverse_mul_point", linverse_mul_point },
+		{ "get", lget },
+		{ "set", lset },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
