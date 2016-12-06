@@ -23,15 +23,6 @@ dict_int(lua_State *L, const char *key) {
 	return v;
 }
 
-static uint32_t
-color4f(struct color4f *c4f) {
-	uint8_t rr = (int)(c4f->r*255);
-	uint8_t gg = (int)(c4f->g*255);
-	uint8_t bb = (int)(c4f->b*255);
-	uint8_t aa = (int)(c4f->a*255);
-	return (uint32_t)aa << 24 | (uint32_t)rr << 16 | (uint32_t)gg << 8 | bb;
-}
-
 static int
 _init_from_table(struct particle_config *ps, struct lua_State *L) {
 	ps->angle = -dict_float(L, "angle");
@@ -163,32 +154,8 @@ lupdate(lua_State *L) {
 		ps->config->sourcePosition.y = 0;
 	}*/
 
-	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
-		ps->config->emitterMatrix = anchor;
-	} else {
-		ps->config->emitterMatrix = NULL;
-	}
-	ps->config->sourcePosition.x = 0;
-	ps->config->sourcePosition.y = 0;
-	particle_system_update(ps, dt);
-
-	if (ps->isActive || ps->isAlive) {
-		lua_pushboolean(L, 1);
-		int n = ps->particleCount;
-		int i;
-		struct matrix tmp;
-		for (i=0;i<n;i++) {
-			struct particle *p = &ps->particles[i];
-			calc_particle_system_mat(p,&ps->matrix[i], edge);
-			if (ps->config->positionType != POSITION_TYPE_GROUPED) {
-				memcpy(tmp.m, &ps->matrix[i], sizeof(int) * 6);
-				matrix_mul(&ps->matrix[i], &tmp, anchor);
-			}
-			p->color_val = color4f(&p->color);
-		}
-	} else {
-		lua_pushboolean(L, 0);
-	}
+	bool ok = particle_update(ps, dt, anchor, edge);
+	lua_pushboolean(L, ok);
 	return 1;
 }
 

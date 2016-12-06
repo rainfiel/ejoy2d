@@ -9,6 +9,7 @@
 #include "array.h"
 #include "particle.h"
 #include "material.h"
+#include "ejoy2dgame.h"
 
 #include <string.h>
 #include <assert.h>
@@ -471,13 +472,13 @@ picture_pos(int m[6], struct pack_picture *picture, int pos[2]) {
 }
 
 static void
-drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *pic, const struct srt *srt) {
+drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *pic) {
 	int n = ps->particleCount;
-	int i;
 	struct matrix *old_m = s->t.mat;
 	uint32_t old_c = s->t.color;
 
 	shader_blend(ps->config->srcBlend, ps->config->dstBlend);
+	int i;
 	for (i=0;i<n;i++) {
 		struct particle *p = &ps->particles[i];
 		struct matrix *mat = &ps->matrix[i];
@@ -493,6 +494,26 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 	s->t.color = old_c;
 }
 
+static bool
+update_particle(struct particle_system *ps, struct sprite *s, struct sprite_trans *t, struct srt *srt) {
+	struct matrix tmp;
+	struct vertex_pack vb[4];
+	int i,j;
+	if (t->mat == NULL) {
+		matrix_identity(&tmp);
+	} else {
+		tmp = *t->mat;
+	}
+	matrix_srt(&tmp, srt);
+			
+	int aabb[4];
+	sprite_aabb(s, NULL, false, true, aabb);
+	int edge = aabb[2];
+	if (edge > aabb[3]) edge = aabb[3];
+
+	return particle_update(ps, 1.0/LOGIC_FRAME, &tmp, 2*edge);
+}
+
 static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material) {
 	struct sprite_trans temp;
@@ -504,7 +525,11 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE, material);
-		sprite_drawquad(s->s.pic, srt, t);
+		if (s->data.ps && update_particle(s->data.ps, s, t, srt)) {
+			drawparticle(s, s->data.ps, s->s.pic);
+		} else {
+			sprite_drawquad(s->s.pic, srt, t);
+		}
 		return 0;
 	case TYPE_POLYGON:
 		switch_program(t, PROGRAM_PICTURE, material);
@@ -520,7 +545,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 	case TYPE_ANCHOR:
 		if (s->data.anchor->ps){
 			switch_program(t, PROGRAM_PICTURE, material);
-			drawparticle(s, s->data.anchor->ps, s->data.anchor->pic, srt);
+			drawparticle(s, s->data.anchor->ps, s->data.anchor->pic);
 		}
 		anchor_update(s, srt, t);
 		return 0;

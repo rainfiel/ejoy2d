@@ -416,7 +416,7 @@ lsetautoscale(lua_State *L) {
         return luaL_error(L, "Only label can set auto_scale");
     }
 
-    bool auto_scale = lua_toboolean(L, 2);
+    bool auto_scale = (bool)lua_toboolean(L, 2);
     s->s.label->auto_scale = auto_scale;
 
     return 0;
@@ -981,6 +981,22 @@ lchildren_name(lua_State *L) {
 }
 
 static int
+lset_particle(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PICTURE)
+		return luaL_error(L, "need a pic");
+	
+	get_reftable(L, 1);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, -2, 0);
+	lua_pop(L, 1);
+
+	s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
+
+	return 0;
+}
+
+static int
 lset_anchor_particle(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANCHOR)
@@ -1446,6 +1462,7 @@ lmethod(lua_State *L) {
 		{ "child_pos", lchild_pos },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
+		{ "set_particle", lset_particle },
 		{ "calc_matrix", lcalc_matrix },
 		{ "pic_tex_coord", lget_pic_tex_coord },
 		{ NULL, NULL, },

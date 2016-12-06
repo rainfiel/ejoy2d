@@ -320,3 +320,40 @@ particle_system_update(struct particle_system *ps, float dt) {
 	ps->isAlive = ps->particleCount > 0;
 }
 
+bool particle_update(struct particle_system *ps, float dt, struct matrix *m, int edge) {
+	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
+		ps->config->emitterMatrix = m;
+	} else {
+		ps->config->emitterMatrix = NULL;
+	}
+	ps->config->sourcePosition.x = 0;
+	ps->config->sourcePosition.y = 0;
+	particle_system_update(ps, dt);
+
+	if (ps->isActive || ps->isAlive) {
+		int n = ps->particleCount;
+		int i;
+		struct matrix tmp;
+		for (i=0;i<n;i++) {
+			struct particle *p = &ps->particles[i];
+			calc_particle_system_mat(p,&ps->matrix[i], edge);
+			if (ps->config->positionType != POSITION_TYPE_GROUPED) {
+				memcpy(tmp.m, &ps->matrix[i], sizeof(int) * 6);
+				matrix_mul(&ps->matrix[i], &tmp, m);
+			}
+			p->color_val = color4f(&p->color);
+		}
+		return true;
+	} else {
+		return false;
+	}
+}
+
+uint32_t
+color4f(struct color4f *c4f) {
+	uint8_t rr = (int)(c4f->r*255);
+	uint8_t gg = (int)(c4f->g*255);
+	uint8_t bb = (int)(c4f->b*255);
+	uint8_t aa = (int)(c4f->a*255);
+	return (uint32_t)aa << 24 | (uint32_t)rr << 16 | (uint32_t)gg << 8 | bb;
+}

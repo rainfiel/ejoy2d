@@ -39,8 +39,6 @@
 #define DRAWFRAME_FUNCTION 3
 #define TOP_FUNCTION 3
 
-static int LOGIC_FRAME = 30;
-
 static int
 _panic(lua_State *L) {
 	const char * err = lua_tostring(L,-1);

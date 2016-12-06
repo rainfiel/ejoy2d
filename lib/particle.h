@@ -222,6 +222,8 @@ void init_with_particles(struct particle_system *ps, int numberOfParticles);
 void particle_system_update(struct particle_system *ps, float dt);
 void calc_particle_system_mat(struct particle * p, struct matrix *m, int edge);
 void particle_system_reset(struct particle_system *ps);
+bool particle_update(struct particle_system *ps, float dt, struct matrix *m, int edge);
+uint32_t color4f(struct color4f *c4f);
 
 int ejoy2d_particle(lua_State *L);
 

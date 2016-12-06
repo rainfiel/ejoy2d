@@ -4,6 +4,8 @@
 #include "ejoy2d.h"
 #include <lua.h>
 
+static int LOGIC_FRAME = 30;
+
 struct game {
 	lua_State *L;
 	float real_time;
