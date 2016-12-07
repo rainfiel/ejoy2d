@@ -134,6 +134,11 @@ lreset(lua_State *L) {
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	particle_system_reset(ps);
 
+	if (!lua_isnoneornil(L, 2))	{
+		if (!_init_from_table(ps->config, L))
+			luaL_error(L, "reset particle error");
+	}
+
 	return 1;
 }
 
@@ -184,6 +189,24 @@ ldata(lua_State *L) {
 	return 1;
 }
 
+static void
+get_reftable(lua_State *L, int index) {
+	lua_getuservalue(L, index);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 1);
+		lua_pushvalue(L, -1);
+		lua_setuservalue(L, index);
+	}
+}
+
+static int
+lgetuserdata(lua_State *L){
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
+	get_reftable(L, 1);
+	return 1;
+}
+
 int
 ejoy2d_particle(lua_State *L) {
 	luaL_Reg l[] = {
@@ -191,6 +214,7 @@ ejoy2d_particle(lua_State *L) {
 		{ "reset", lreset },
 		{ "update", lupdate },
 		{ "data", ldata },
+		{ "usr_data", lgetuserdata },
 		{ NULL, NULL },
 	};
 
