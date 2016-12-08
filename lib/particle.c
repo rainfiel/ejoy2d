@@ -253,13 +253,13 @@ init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->config->totalParticles = numberOfParticles;
 	ps->config->positionType = POSITION_TYPE_RELATIVE;
 	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
+	ps->particleCount = 0;
 }
 
 void
 particle_system_reset(struct particle_system *ps) {
 	ps->isActive = true;
 	ps->emitCounter = 0.0;
-	ps->particleCount = 0;
 	ps->elapsed = 0.0;
 }
 

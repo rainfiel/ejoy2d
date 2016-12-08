@@ -473,6 +473,8 @@ picture_pos(int m[6], struct pack_picture *picture, int pos[2]) {
 
 static void
 drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *pic) {
+	if (!ps->isActive) return;
+
 	int n = ps->particleCount;
 	struct matrix *old_m = s->t.mat;
 	uint32_t old_c = s->t.color;
@@ -525,8 +527,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE, material);
-		if (s->data.ps && update_particle(s->data.ps, s, t, srt)) {
-			drawparticle(s, s->data.ps, s->s.pic);
+		if (s->data.ps) {
+			if (update_particle(s->data.ps, s, t, srt))
+				drawparticle(s, s->data.ps, s->s.pic);
 		} else {
 			sprite_drawquad(s->s.pic, srt, t);
 		}

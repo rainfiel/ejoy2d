@@ -207,11 +207,19 @@ lgetuserdata(lua_State *L){
 	return 1;
 }
 
+static int
+ldeactive(lua_State *L){
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
+	ps->isActive = false;
+	return 0;
+}
+
 int
 ejoy2d_particle(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "new", lnew },
 		{ "reset", lreset },
+		{ "deactive", ldeactive },
 		{ "update", lupdate },
 		{ "data", ldata },
 		{ "usr_data", lgetuserdata },
