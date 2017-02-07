@@ -508,12 +508,7 @@ update_particle(struct particle_system *ps, struct sprite *s, struct sprite_tran
 	}
 	matrix_srt(&tmp, srt);
 			
-	int aabb[4];
-	sprite_aabb(s, NULL, false, true, aabb);
-	int edge = aabb[2];
-	if (edge > aabb[3]) edge = aabb[3];
-
-	return particle_update(ps, 1.0/LOGIC_FRAME, &tmp, 2*edge);
+	return particle_update(ps, 1.0/LOGIC_FRAME, &tmp);
 }
 
 static int

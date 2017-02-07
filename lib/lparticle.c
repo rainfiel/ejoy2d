@@ -159,7 +159,7 @@ lupdate(lua_State *L) {
 		ps->config->sourcePosition.y = 0;
 	}*/
 
-	bool ok = particle_update(ps, dt, anchor, edge);
+	bool ok = particle_update(ps, dt, anchor);
 	lua_pushboolean(L, ok);
 	return 1;
 }

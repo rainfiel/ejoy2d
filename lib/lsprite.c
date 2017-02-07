@@ -992,6 +992,12 @@ lset_particle(lua_State *L) {
 	lua_pop(L, 1);
 
 	s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
+	
+	int aabb[4];
+	sprite_aabb(s, NULL, false, true, aabb);
+	int width = abs(aabb[2] - aabb[0]);
+	int height = abs(aabb[3] - aabb[1]);
+	s->data.ps->edge = width > height ? width : height;
 
 	return 0;
 }

@@ -254,6 +254,7 @@ init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->config->positionType = POSITION_TYPE_RELATIVE;
 	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
 	ps->particleCount = 0;
+	ps->edge = 1;
 }
 
 void
@@ -320,7 +321,7 @@ particle_system_update(struct particle_system *ps, float dt) {
 	ps->isAlive = ps->particleCount > 0;
 }
 
-bool particle_update(struct particle_system *ps, float dt, struct matrix *m, int edge) {
+bool particle_update(struct particle_system *ps, float dt, struct matrix *m) {
 	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
 		ps->config->emitterMatrix = m;
 	} else {
@@ -329,6 +330,7 @@ bool particle_update(struct particle_system *ps, float dt, struct matrix *m, int
 	ps->config->sourcePosition.x = 0;
 	ps->config->sourcePosition.y = 0;
 	particle_system_update(ps, dt);
+	float edge = ps->edge;
 
 	if (ps->isActive || ps->isAlive) {
 		int n = ps->particleCount;

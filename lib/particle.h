@@ -192,6 +192,8 @@ struct particle_config {
 struct particle_system {
 	//! time elapsed since the start of the system (in seconds)
 	float elapsed;
+	float edge;
+
 	//! Array of particles
 	struct particle *particles;
 	struct matrix *matrix;
@@ -222,7 +224,7 @@ void init_with_particles(struct particle_system *ps, int numberOfParticles);
 void particle_system_update(struct particle_system *ps, float dt);
 void calc_particle_system_mat(struct particle * p, struct matrix *m, int edge);
 void particle_system_reset(struct particle_system *ps);
-bool particle_update(struct particle_system *ps, float dt, struct matrix *m, int edge);
+bool particle_update(struct particle_system *ps, float dt, struct matrix *m);
 uint32_t color4f(struct color4f *c4f);
 
 int ejoy2d_particle(lua_State *L);
