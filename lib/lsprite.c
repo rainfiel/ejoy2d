@@ -981,23 +981,38 @@ lchildren_name(lua_State *L) {
 }
 
 static int
+lget_particle(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PICTURE || !s->data.ps)
+		return 0;
+	
+	get_reftable(L, 1);
+	lua_rawgeti(L, -1, 0);
+	return 1;
+}
+
+static int
 lset_particle(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_PICTURE)
 		return luaL_error(L, "need a pic");
-	
+
 	get_reftable(L, 1);
 	lua_pushvalue(L, 2);
 	lua_rawseti(L, -2, 0);
 	lua_pop(L, 1);
 
-	s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
+	if (lua_isnoneornil(L, 2)) {
+		s->data.ps = NULL;
+	} else {
+		s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
 	
-	int aabb[4];
-	sprite_aabb(s, NULL, false, true, aabb);
-	int width = abs(aabb[2] - aabb[0]);
-	int height = abs(aabb[3] - aabb[1]);
-	s->data.ps->edge = width > height ? width : height;
+		int aabb[4];
+		sprite_aabb(s, NULL, false, true, aabb);
+		int width = abs(aabb[2] - aabb[0]);
+		int height = abs(aabb[3] - aabb[1]);
+		s->data.ps->edge = width > height ? width : height;
+	}
 
 	return 0;
 }
@@ -1469,6 +1484,7 @@ lmethod(lua_State *L) {
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
 		{ "set_particle", lset_particle },
+		{ "get_particle", lget_particle },
 		{ "calc_matrix", lcalc_matrix },
 		{ "pic_tex_coord", lget_pic_tex_coord },
 		{ NULL, NULL, },
