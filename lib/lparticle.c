@@ -214,6 +214,28 @@ ldeactive(lua_State *L){
 	return 0;
 }
 
+static int
+lconfig(lua_State *L){
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
+
+	if (lua_isnoneornil(L, 2)){
+		size_t sz = sizeof(struct particle_config);
+		lua_pushlstring(L, (char*)ps->config, sz);
+	
+		return 1;
+	} else {
+		size_t sz;
+		const char *p = luaL_checklstring(L, 2, &sz);
+		size_t pack_sz = sizeof(struct particle_config);
+		if (sz != pack_sz)
+			return luaL_error(L, "string size err(%d, %d)", pack_sz, sz);
+		
+		struct particle_config* input = (struct particle_config*)p;
+		memcpy(ps->config, input, sz);
+		return 0;
+	}
+}
+
 int
 ejoy2d_particle(lua_State *L) {
 	luaL_Reg l[] = {
@@ -223,6 +245,7 @@ ejoy2d_particle(lua_State *L) {
 		{ "update", lupdate },
 		{ "data", ldata },
 		{ "usr_data", lgetuserdata },
+		{ "config", lconfig },
 		{ NULL, NULL },
 	};
 

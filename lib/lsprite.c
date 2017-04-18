@@ -11,6 +11,7 @@
 
 #include <lua.h>
 #include <lauxlib.h>
+#include <string>
 
 #define SRT_X 1
 #define SRT_Y 2
@@ -585,6 +586,50 @@ lgettext(lua_State *L) {
 }
 
 static int
+lgetlabel(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Only label can get text");
+	}
+	
+	struct pack_label * pl = s->s.label;
+	size_t sz = sizeof(struct pack_label);
+	lua_pushlstring(L, (char*)pl, sz);
+	return 1;
+}
+
+static int
+lsetlabel(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Only label can get text");
+	}
+
+	size_t sz;
+	const char *p = luaL_checklstring(L, 2, &sz);
+	size_t pack_sz = sizeof(struct pack_label);
+	if (sz != pack_sz)
+		return luaL_error(L, "string size err(%d, %d)", pack_sz, sz);
+	
+	struct pack_label *input = (struct pack_label*)p;
+	memcpy(s->s.label, input, sz);
+	return 0;
+}
+
+static int
+lgetrawdata(lua_State *L) {
+	struct sprite *s = self(L);
+	size_t sz = 0;
+	if (s->id == ANCHOR_ID)	
+		sz = sizeof(struct sprite) + sizeof(struct anchor_data);
+	else
+		sz = sprite_size(s->pack, s->id);
+
+	lua_pushlstring(L, (char*)s, sz);
+	return 1;
+}
+
+static int
 lgetcolor(lua_State *L) {
 	struct sprite *s = self(L);
     if (s->type != TYPE_LABEL)
@@ -696,6 +741,7 @@ lgetter(lua_State *L) {
 		{"name", lgetname },
 		{"type", lgettype },
 		{"text", lgettext},
+		{"label_cfg", lgetlabel},
 		{"color", lgetcolor },
 		{"alpha", lgetalpha },
 		{"additive", lgetadditive },
@@ -710,6 +756,7 @@ lgetter(lua_State *L) {
 		{"material", lgetmaterial },
 //		{"ref_table", lgetreftable },
 		{"usr_data", lgetusrdata },
+		{"raw_data", lgetrawdata },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -723,6 +770,7 @@ lsetter(lua_State *L) {
 		{"visible", lsetvisible},
 		{"matrix" , lsetmat},
 		{"text", lsettext},
+		{"label_cfg", lsetlabel},
 		{"color", lsetcolor},
 		{"alpha", lsetalpha},
 		{"additive", lsetadditive },
