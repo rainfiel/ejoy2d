@@ -29,9 +29,9 @@
 #define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 #define EJOY_RESUME "EJOY2D_RESUME"
 #define EJOY_PAUSE "EJOY2D_PAUSE"
-#define EJOY_CLOSE "EJOY2D_CLOSE"
 
 //optional functions
+#define EJOY_CLOSE "EJOY2D_CLOSE"
 #define EJOY_VIEW_LAYOUT "EJOY2D_VIEW_LAYOUT"
 #define EJOY_RELOAD "EJOY2D_RELOAD"
 
@@ -59,7 +59,6 @@ linject(lua_State *L) {
 		EJOY_HANDLE_ERROR,
 		EJOY_RESUME,
 		EJOY_PAUSE,
-		EJOY_CLOSE,
 	};
 	int i;
 	for (i=0;i<sizeof(ejoy_callback)/sizeof(ejoy_callback[0]);i++) {
@@ -73,6 +72,7 @@ linject(lua_State *L) {
 	static const char * optional_callback[] = {
 		EJOY_VIEW_LAYOUT,
 		EJOY_RELOAD,
+		EJOY_CLOSE,
 	};
 	for (i=0;i<sizeof(optional_callback)/sizeof(optional_callback[0]);i++) {
 		lua_getfield(L, lua_upvalueindex(1), optional_callback[i]);

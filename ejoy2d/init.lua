@@ -49,7 +49,7 @@ function ejoy2d.start(callback)
 	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
 	fw.EJOY2D_RESUME = assert(callback.on_resume)
 	fw.EJOY2D_PAUSE = assert(callback.on_pause)
-	fw.EJOY2D_CLOSE = assert(callback.on_close)
+	fw.EJOY2D_CLOSE = callback.on_close
 
 	--optional callbacks
 	fw.EJOY2D_VIEW_LAYOUT = callback.view_layout
