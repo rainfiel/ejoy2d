@@ -622,11 +622,23 @@ lgetrawdata(lua_State *L) {
 	size_t sz = 0;
 	if (s->id == ANCHOR_ID)	
 		sz = sizeof(struct sprite) + sizeof(struct anchor_data);
-	else
+	else if (s->pack)
 		sz = sprite_size(s->pack, s->id);
+	else
+		sz = sizeof(struct sprite);
 
 	lua_pushlstring(L, (char*)s, sz);
 	return 1;
+}
+
+static int
+lsetrawdata(lua_State *L) {
+	struct sprite *s = self(L);
+
+	size_t sz;
+	struct sprite *spr = (struct sprite*)luaL_checklstring(L, 2, &sz);
+	memcpy(s, spr, sz);
+	return 0;
 }
 
 static int
@@ -778,7 +790,8 @@ lsetter(lua_State *L) {
 		{"force_inherit_frame", lset_force_inherit_frame },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
-        {"auto_scale", lsetautoscale},
+		{"auto_scale", lsetautoscale},
+		{"raw_data", lsetrawdata },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
