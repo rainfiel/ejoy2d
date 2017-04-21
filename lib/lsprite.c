@@ -616,6 +616,52 @@ lsetlabel(lua_State *L) {
 	return 0;
 }
 
+#define PACK_TABLE(t, a)  lua_pushstring(L, #t); \
+													lua_rawseti(L, -2, 1); \
+													lua_pushlstring(L, (char*)s->s.##a, sizeof(struct t)); \
+													lua_rawseti(L, -2, 2); \
+
+static int
+lget_sprite_s(lua_State *L) {
+	struct sprite *s = self(L);
+	size_t sz;
+
+	lua_newtable(L);
+	switch (s->type)
+	{
+	case TYPE_ANIMATION:
+		PACK_TABLE(pack_animation, ani);
+		break;
+	case TYPE_LABEL:
+		PACK_TABLE(pack_label, label);
+		break;
+	case TYPE_PICTURE:
+		PACK_TABLE(pack_picture, pic);
+		break;
+	case TYPE_PANNEL:
+		PACK_TABLE(pack_pannel, pannel);
+		break;
+	case TYPE_POLYGON:
+		PACK_TABLE(pack_polygon_data, poly);
+		break;
+	default:
+		break;
+	}
+
+	return 1;
+}
+
+static int
+lset_sprite_s(lua_State *L) {
+	struct sprite *s = self(L);
+	
+	size_t sz;
+	const char *pack = luaL_checklstring(L, 2, &sz);
+	memcpy(s->s.ani, pack, sz);
+
+	return 0;
+}
+
 static int
 lgetrawdata(lua_State *L) {
 	struct sprite *s = self(L);
@@ -769,6 +815,7 @@ lgetter(lua_State *L) {
 //		{"ref_table", lgetreftable },
 		{"usr_data", lgetusrdata },
 		{"raw_data", lgetrawdata },
+		{"sprite_s", lget_sprite_s },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -792,6 +839,7 @@ lsetter(lua_State *L) {
 		{"scissor", lsetscissor },
 		{"auto_scale", lsetautoscale},
 		{"raw_data", lsetrawdata },
+		{"sprite_s", lset_sprite_s },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
