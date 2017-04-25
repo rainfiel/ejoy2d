@@ -630,7 +630,10 @@ lget_sprite_s(lua_State *L) {
 	switch (s->type)
 	{
 	case TYPE_ANIMATION:
-		PACK_TABLE(pack_animation, ani);
+		lua_pushstring(L, "pack_animation");
+		lua_rawseti(L, -2, 1);
+		lua_pushlstring(L, (char*)s->s.ani, SIZEOF_ANIMATION + s->s.ani->component_number * SIZEOF_COMPONENT);
+		lua_rawseti(L, -2, 2);
 		break;
 	case TYPE_LABEL:
 		PACK_TABLE(pack_label, label);
