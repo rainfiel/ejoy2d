@@ -11,7 +11,7 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <string>
+#include <string.h>
 
 #define SRT_X 1
 #define SRT_Y 2
@@ -616,11 +616,6 @@ lsetlabel(lua_State *L) {
 	return 0;
 }
 
-#define PACK_TABLE(t, a)  lua_pushstring(L, #t); \
-													lua_rawseti(L, -2, 1); \
-													lua_pushlstring(L, (char*)s->s.##a, sizeof(struct t)); \
-													lua_rawseti(L, -2, 2); \
-
 static int
 lget_sprite_s(lua_State *L) {
 	struct sprite *s = self(L);
@@ -636,16 +631,28 @@ lget_sprite_s(lua_State *L) {
 		lua_rawseti(L, -2, 2);
 		break;
 	case TYPE_LABEL:
-		PACK_TABLE(pack_label, label);
+		lua_pushstring(L, "pack_label");
+		lua_rawseti(L, -2, 1);
+		lua_pushlstring(L, (char*)s->s.label, SIZEOF_LABEL);
+		lua_rawseti(L, -2, 2);
 		break;
 	case TYPE_PICTURE:
-		PACK_TABLE(pack_picture, pic);
+		lua_pushstring(L, "pack_picture");
+		lua_rawseti(L, -2, 1);
+		lua_pushlstring(L, (char*)s->s.pic, SIZEOF_PICTURE);
+		lua_rawseti(L, -2, 2);
 		break;
 	case TYPE_PANNEL:
-		PACK_TABLE(pack_pannel, pannel);
+		lua_pushstring(L, "pack_pannel");
+		lua_rawseti(L, -2, 1);
+		lua_pushlstring(L, (char*)s->s.pannel, SIZEOF_PANNEL);
+		lua_rawseti(L, -2, 2);
 		break;
 	case TYPE_POLYGON:
-		PACK_TABLE(pack_polygon_data, poly);
+		lua_pushstring(L, "pack_polygon_data");
+		lua_rawseti(L, -2, 1);
+		lua_pushlstring(L, (char*)s->s.poly, SIZEOF_POLY);
+		lua_rawseti(L, -2, 2);
 		break;
 	default:
 		break;
