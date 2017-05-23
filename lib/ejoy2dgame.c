@@ -209,6 +209,7 @@ ejoy2d_game() {
 	G->L = L;
 	G->real_time = 0;
 	G->logic_time = 0;
+	G->frame_count = 0;
 
 	ejoy2d_init(L);
 
@@ -342,7 +343,10 @@ ejoy2d_call_lua(lua_State *L, int n, int r) {
 }
 
 static void
-logic_frame(lua_State *L) {
+logic_frame(struct game *G) {
+	lua_State *L = G->L;
+	G->frame_count++;
+
 	lua_pushvalue(L, UPDATE_FUNCTION);
 	call(L, 0, 0);
 	lua_settop(L, TOP_FUNCTION);
@@ -356,7 +360,7 @@ ejoy2d_game_update(struct game *G, float time) {
 		G->real_time += time;
 	}
 	while (G->logic_time < G->real_time) {
-		logic_frame(G->L);
+		logic_frame(G);
 		G->logic_time += 1.0f/LOGIC_FRAME;
 	}
 }

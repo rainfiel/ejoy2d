@@ -10,6 +10,7 @@ struct game {
 	lua_State *L;
 	float real_time;
 	float logic_time;
+	int frame_count;
 };
 
 

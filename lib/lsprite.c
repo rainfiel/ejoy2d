@@ -619,7 +619,6 @@ lsetlabel(lua_State *L) {
 static int
 lget_sprite_s(lua_State *L) {
 	struct sprite *s = self(L);
-	size_t sz;
 
 	lua_newtable(L);
 	switch (s->type)
