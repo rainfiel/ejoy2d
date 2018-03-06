@@ -37,11 +37,14 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
+			if (arg->mirror)
+				xx = -xx;
+
 			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
 			float tx = q->texture_coord[j*2+0];
 			float ty = q->texture_coord[j*2+1];
-
+			
 			screen_trans(&vx,&vy);
 			vb[j].vx = vx;
 			vb[j].vy = vy;
@@ -155,6 +158,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
+	s->t.mirror = false;
 	s->flags = 0;
 	s->name = NULL;
 	s->id = id;
@@ -352,6 +356,7 @@ sprite_trans_mul2(struct sprite_pack *pack, struct sprite_trans_data *a, struct 
 	t->program = PROGRAM_DEFAULT;
 	sprite_trans_mul_(b , t, tmp_matrix);
 	t->program = b->program;
+	t->mirror = b->mirror;
 
 	return t;
 }
@@ -366,6 +371,7 @@ sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_t
 	if (t->program == PROGRAM_DEFAULT) {
 		t->program = b->program;
 	}
+	t->mirror = b->mirror;
 	return t;
 }
 

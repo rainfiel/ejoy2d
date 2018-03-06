@@ -188,6 +188,11 @@ LUA_API void	       *(lua_touserdata) (lua_State *L, int idx);
 LUA_API lua_State      *(lua_tothread) (lua_State *L, int idx);
 LUA_API const void     *(lua_topointer) (lua_State *L, int idx);
 
+LUA_API void *luaM_realloc_ (lua_State *L, void *block, size_t oldsize,
+                                                          size_t size);
+LUA_API void *luaM_growaux_ (lua_State *L, void *block, int *size,
+                               size_t size_elem, int limit,
+                               const char *what);
 
 /*
 ** Comparison and arithmetic functions

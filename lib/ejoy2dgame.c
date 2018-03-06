@@ -451,7 +451,9 @@ void
 ejoy2d_game_close(struct game *G) {
 	lua_State *L = G->L;
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_CLOSE);
-	call(L, 0, 0);
+	if (lua_isfunction(L, -1)) {
+		call(L, 0, 0);
+	}
 	lua_settop(L, TOP_FUNCTION);
 }
 

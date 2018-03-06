@@ -272,6 +272,17 @@ lsetvisible(lua_State *L) {
 }
 
 static int
+lsetmirror(lua_State *L) {
+	struct sprite *s = self(L);
+	if (lua_toboolean(L, 2)) {
+		s->t.mirror = true;
+	} else {
+		s->t.mirror = false;
+	}
+	return 0;
+}
+
+static int
 lgetmessage(lua_State *L) {
 	struct sprite *s = self(L);
 	lua_pushboolean(L, s->flags & SPRFLAG_MESSAGE);
@@ -836,6 +847,7 @@ lsetter(lua_State *L) {
 		{"frame", lsetframe},
 		{"action", lsetaction},
 		{"visible", lsetvisible},
+		{"mirror", lsetmirror},
 		{"matrix" , lsetmat},
 		{"text", lsettext},
 		{"label_cfg", lsetlabel},
