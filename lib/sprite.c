@@ -330,7 +330,10 @@ sprite_trans_mul_(struct sprite_trans *b, struct sprite_trans *t, struct matrix 
 	if (t->mat == NULL) {
 		t->mat = b->mat;
 	} else if (b->mat) {
-		matrix_mul(tmp_matrix, t->mat, b->mat);
+		if (b->mirror)
+			matrix_mirror_x_mul(tmp_matrix, t->mat, b->mat);
+		else
+			matrix_mul(tmp_matrix, t->mat, b->mat);
 		t->mat = tmp_matrix;
 	}
 	if (t->color == 0xffffffff) {

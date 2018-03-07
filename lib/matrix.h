@@ -36,6 +36,19 @@ matrix_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2
 }
 
 static inline void
+matrix_mirror_x_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2) {
+	int *m = mm->m;
+	const int *m1 = mm1->m;
+	const int *m2 = mm2->m;
+	m[0] = (m1[0] * m2[0] + m1[1] * m2[2]) /1024;
+	m[1] = (m1[0] * m2[1] + m1[1] * m2[3]) /1024;
+	m[2] = (m1[2] * m2[0] + m1[3] * m2[2]) /1024;
+	m[3] = (m1[2] * m2[1] + m1[3] * m2[3]) /1024;
+	m[4] = (-m1[4] * m2[0] + m1[5] * m2[2]) /1024 + m2[4];
+	m[5] = (-m1[4] * m2[1] + m1[5] * m2[3]) /1024 + m2[5];
+}
+
+static inline void
 matrix_mul_point(struct matrix *mat, double* x, double* y) {
 	int *m = mat->m;
 	double xx = *x;
