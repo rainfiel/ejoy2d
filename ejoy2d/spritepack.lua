@@ -8,7 +8,7 @@ local pack = require "ejoy2d.spritepack.c"
 -- don't release pack_pool
 local pack_pool = {}
 
-local spritepack = {}
+local spritepack = {pack_color = pack.color}
 
 local TYPE_PICTURE = assert(pack.TYPE_PICTURE)
 local TYPE_ANIMATION = assert(pack.TYPE_ANIMATION)
@@ -118,10 +118,10 @@ local function pack_part(data, ret)
 			end
 		end
 		if data.color and data.color ~= 0xffffffff then
-			table.insert(ret, pack.color(data.color))
+			table.insert(ret, spritepack.pack_color(data.color))
 		end
 		if data.add and data.add ~= 0 then
-			table.insert(ret, pack.color(data.add))
+			table.insert(ret, spritepack.pack_color(data.add))
 		end
 		if data.touch then
 			table.insert(ret, pack.word(1))
