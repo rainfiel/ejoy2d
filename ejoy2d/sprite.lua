@@ -132,6 +132,18 @@ registry.ejoy2d_apply_stringtable = function(spr, string_id)
 	spr.text = sprite.string_table[string_id]
 end
 
+local function split(str, sep)
+   local sep, fields = sep or ":", {}
+   local pattern = string.format("([^%s]+)", sep)
+   str:gsub(pattern, function(c) fields[#fields+1] = c end)
+   return fields
+end
+
+registry.ejoy2d_external_sprite = function(key_str)
+	local keys = split(key_str, "@")
+	local pack, id = pack.query(keys[1], keys[2])
+	return c.new(pack,id)
+end
 
 function sprite.new(packname, name)
 	local pack, id = pack.query(packname, name)

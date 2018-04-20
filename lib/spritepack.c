@@ -252,7 +252,7 @@ import_animation(struct import_stream *is) {
 	int i;
 	for (i=0;i<component;i++) {
 		int id = import_word(is);
-		if (id != ANCHOR_ID && id >= is->pack->n) {
+		if (id != ANCHOR_ID && id != EXTERNAL_ID && id >= is->pack->n) {
 			luaL_error(is->alloc->L, "Invalid stream (%d): wrong id %d", is->current_id, id);
 		}
 		pa->component[i].id = id;
@@ -776,6 +776,10 @@ ejoy2d_spritepack(lua_State *L) {
 	lua_setfield(L, -2, "TYPE_PANNEL");
 	lua_pushinteger(L, TYPE_MATRIX);
 	lua_setfield(L, -2, "TYPE_MATRIX");
+	lua_pushinteger(L, ANCHOR_ID);
+	lua_setfield(L, -2, "ANCHOR_ID");
+	lua_pushinteger(L, EXTERNAL_ID);
+	lua_setfield(L, -2, "EXTERNAL_ID");
 
 	return 1;
 }

@@ -13,7 +13,8 @@
 #define TYPE_ANCHOR 6
 #define TYPE_MATRIX 7
 
-#define ANCHOR_ID 0xffff
+#define ANCHOR_ID 0xFFFF
+#define EXTERNAL_ID 0xFFFF-1
 #define SCREEN_SCALE 16
 
 struct matrix;

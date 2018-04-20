@@ -17,6 +17,9 @@ local TYPE_LABEL = assert(pack.TYPE_LABEL)
 local TYPE_PANNEL = assert(pack.TYPE_PANNEL)
 local TYPE_MATRIX =assert(pack.TYPE_MATRIX)
 
+local ANCHOR_ID = assert(pack.ANCHOR_ID)
+local EXTERNAL_ID = assert(pack.EXTERNAL_ID)
+
 local function pack_picture(src, ret)
 	table.insert(ret , pack.byte(TYPE_PICTURE))
 	local n = #src
@@ -170,12 +173,12 @@ local function pack_animation(data, ret)
 	local component = assert(data.component)
 	table.insert(ret , pack.word(#component))
 	for _, v in ipairs(component) do
-		if v.id and v.id > max_id then
+		if v.id and v.id ~= EXTERNAL_ID and v.id > max_id then
 			max_id = v.id
 		end
 		if v.id == nil then
 			assert(v.name, "Anchor need a name")
-			v.id = 0xffff	-- Anchor use id 0xffff
+			v.id = ANCHOR_ID	-- Anchor use id 0xffff
 		end
 		table.insert(ret, pack.word(v.id))
 		table.insert(ret, pack.string(v.name))

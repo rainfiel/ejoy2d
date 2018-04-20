@@ -151,6 +151,16 @@ apply_stringtable(lua_State *L, int text_id)
 	lua_call(L, 2, 0);
 }
 
+static struct sprite*
+create_external_sprite(lua_State *L, const char* name)
+{
+	lua_getfield(L, LUA_REGISTRYINDEX, "ejoy2d_external_sprite");
+	luaL_checktype(L, -1, LUA_TFUNCTION);
+	lua_pushstring(L, name);
+	lua_call(L, 1, 1);
+	return (struct sprite*)lua_touserdata(L, -1);
+}
+
 static struct sprite *
 newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	if (id == ANCHOR_ID) { 
@@ -180,9 +190,14 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_pushvalue(L,-1);
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
-		struct sprite *c = newsprite(L, pack, childid);
+		const char* name = sprite_childname(s, i);
+		struct sprite *c;
+		if (childid == EXTERNAL_ID)
+			c = create_external_sprite(L, name);
+		else
+			c = newsprite(L, pack, childid);
 		if (c) {
-			c->name = sprite_childname(s, i);
+			c->name = name;
 			sprite_mount(s, i, c);
 			update_message(c, s, i, s->frame);
 			lua_rawseti(L, -2, i+1);
