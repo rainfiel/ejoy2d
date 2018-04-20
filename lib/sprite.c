@@ -254,6 +254,14 @@ sprite_child(struct sprite *s, const char * childname) {
 			}
 		}
 	}
+	for (i=0;i<ani->component_number;i++) {
+		const char *name = s->data.children[i]->name;
+		if (name) {
+			if (strcmp(name, childname)==0) {
+				return i;
+			}
+		}
+	}
 	return -1;
 }
 

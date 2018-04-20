@@ -199,9 +199,9 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 		else
 			c = newsprite(L, pack, childid);
 		if (c) {
-			c->name = name;
 			sprite_mount(s, i, c);
 			update_message(c, s, i, s->frame);
+			c->name = name;
 			lua_rawseti(L, -2, i+1);
 		}
 	}
