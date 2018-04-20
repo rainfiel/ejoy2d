@@ -190,6 +190,9 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = OFFSET_TO_POINTER(struct pack_pannel, pack, data[id]);
 			s->data.scissor = pp->scissor;
+		} else if (s->type == TYPE_LABEL) {
+			struct pack_label * pl = OFFSET_TO_POINTER(struct pack_label, pack, data[id]);
+			s->data.text_id = pl->text_id;
 		}
 	}
 }

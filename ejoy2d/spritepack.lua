@@ -151,6 +151,7 @@ local function pack_label(data, ret)
     table.insert(ret, pack.byte(data.space_w or 0))
     table.insert(ret, pack.byte(data.space_h or 0))
     table.insert(ret, pack.byte(data.auto_size or 0))
+    table.insert(ret, pack.word(data.text_id or 0))
 	return pack.label_size()
 end
 

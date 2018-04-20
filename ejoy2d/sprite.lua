@@ -122,7 +122,16 @@ method.fetch = fetch
 method.fetch_by_index = fetch_by_index
 method.test = test
 
-local sprite = {}
+local sprite = {
+	string_table = {}
+}
+
+local registry = debug.getregistry()
+registry.ejoy2d_apply_stringtable = function(spr, string_id)
+	spr = debug.setmetatable(spr, sprite_meta)
+	spr.text = sprite.string_table[string_id]
+end
+
 
 function sprite.new(packname, name)
 	local pack, id = pack.query(packname, name)

@@ -61,7 +61,7 @@ struct import_stream {
 static int
 import_byte(struct import_stream *is) {
 	if (is->size == 0) {
-		luaL_error(is->alloc->L, "Invalid import stream (%d)", is->current_id);
+		luaL_error(is->alloc->L, "Invalid import stream (%d) byte", is->current_id);
 	}
 	uint8_t c = (uint8_t)*(is->stream);
 	++is->stream;
@@ -73,7 +73,7 @@ import_byte(struct import_stream *is) {
 static int
 import_word(struct import_stream *is) {
 	if (is->size < 2) {
-		luaL_error(is->alloc->L, "Invalid import stream (%d)", is->current_id);
+		luaL_error(is->alloc->L, "Invalid import stream (%d) word", is->current_id);
 	}
 	uint8_t low = (uint8_t)*(is->stream);
 	uint8_t high = (uint8_t)*(is->stream+1);
@@ -86,7 +86,7 @@ import_word(struct import_stream *is) {
 static int32_t
 import_int32(struct import_stream *is) {
 	if (is->size < 4) {
-		luaL_error(is->alloc->L, "Invalid import stream (%d)",is->current_id);
+		luaL_error(is->alloc->L, "Invalid import stream (%d) int32",is->current_id);
 	}
 	uint8_t b[4];
 	b[0] = (uint8_t)*(is->stream);
@@ -285,9 +285,10 @@ import_label(struct import_stream *is) {
 	pl->width = import_word(is);
 	pl->height = import_word(is);
 	pl->edge = import_byte(is);
-    pl->space_w = import_byte(is);
-    pl->space_h = import_byte(is);
-    pl->auto_scale = import_byte(is);
+  pl->space_w = import_byte(is);
+  pl->space_h = import_byte(is);
+  pl->auto_scale = import_byte(is);
+	pl->text_id = import_word(is);
 }
 
 static void

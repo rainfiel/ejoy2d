@@ -141,6 +141,16 @@ newanchor(lua_State *L) {
 	return s;
 }
 
+static void
+apply_stringtable(lua_State *L, int text_id)
+{
+	lua_getfield(L, LUA_REGISTRYINDEX, "ejoy2d_apply_stringtable");
+	luaL_checktype(L, -1, LUA_TFUNCTION);
+	lua_pushvalue(L, -2);
+	lua_pushinteger(L, text_id);
+	lua_call(L, 2, 0);
+}
+
 static struct sprite *
 newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	if (id == ANCHOR_ID) { 
@@ -154,6 +164,11 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	luaL_checkstack(L, 1, "lua stack overflow");
 	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
 	sprite_init(s, pack, id, sz);
+
+	if (s->type == TYPE_LABEL) {
+		if (s->data.text_id > 0)
+			apply_stringtable(L, s->data.text_id);
+	}
 	int i;
 	for (i=0;;i++) {
 		int childid = sprite_component(s, i);

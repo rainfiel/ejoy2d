@@ -45,6 +45,7 @@ struct sprite {
 	union {
 		struct sprite * children[1];
 		struct rich_text * rich_text;
+		int text_id;
 		int scissor;
 		struct anchor_data *anchor;
 		struct particle_system *ps;
