@@ -152,12 +152,14 @@ apply_stringtable(lua_State *L, int text_id)
 }
 
 static struct sprite*
-create_external_sprite(lua_State *L, const char* name)
+create_external_sprite(lua_State *L, const char** name)
 {
 	lua_getfield(L, LUA_REGISTRYINDEX, "ejoy2d_external_sprite");
 	luaL_checktype(L, -1, LUA_TFUNCTION);
-	lua_pushstring(L, name);
-	lua_call(L, 1, 1);
+	lua_pushstring(L, *name);
+	lua_call(L, 1, 2);
+	*name = lua_tostring(L, -1);
+	lua_pop(L, 1);
 	return (struct sprite*)lua_touserdata(L, -1);
 }
 
@@ -193,7 +195,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 		const char* name = sprite_childname(s, i);
 		struct sprite *c;
 		if (childid == EXTERNAL_ID)
-			c = create_external_sprite(L, name);
+			c = create_external_sprite(L, &name);
 		else
 			c = newsprite(L, pack, childid);
 		if (c) {

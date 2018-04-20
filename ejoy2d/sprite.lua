@@ -141,8 +141,10 @@ end
 
 registry.ejoy2d_external_sprite = function(key_str)
 	local keys = split(key_str, "@")
-	local pack, id = pack.query(keys[1], keys[2])
-	return c.new(pack,id)
+	if #keys >= 3 then --keys[3] for name
+		local pack, id = pack.query(keys[1], keys[2])
+		return c.new(pack,id), keys[3]
+	end
 end
 
 function sprite.new(packname, name)
