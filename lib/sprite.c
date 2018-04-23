@@ -247,15 +247,11 @@ sprite_child(struct sprite *s, const char * childname) {
 	struct pack_animation *ani = s->s.ani;
 	int i;
 	for (i=0;i<ani->component_number;i++) {
-		const char *name = OFFSET_TO_STRING(s->pack, ani->component[i].name);
-		if (name) {
-			if (strcmp(name, childname)==0) {
-				return i;
-			}
-		}
-	}
-	for (i=0;i<ani->component_number;i++) {
-		const char *name = s->data.children[i]->name;
+		const char *name;
+		if (ani->component[i].id == EXTERNAL_ID && s->data.children[i])
+			name = s->data.children[i]->name;
+		else
+			name = OFFSET_TO_STRING(s->pack, ani->component[i].name);
 		if (name) {
 			if (strcmp(name, childname)==0) {
 				return i;
