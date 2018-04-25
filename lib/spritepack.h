@@ -3,6 +3,7 @@
 
 #include <lua.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define TYPE_EMPTY 0
 #define TYPE_PICTURE 1
