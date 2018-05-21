@@ -83,7 +83,8 @@ struct sprite_trans {
 	uint32_t color;
 	uint32_t additive;
 	int program;
-	bool mirror;
+	bool mirror_x;
+	bool mirror_y;
 };
 
 struct sprite_trans_data {

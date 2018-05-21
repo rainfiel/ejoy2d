@@ -36,7 +36,7 @@ matrix_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2
 }
 
 static inline void
-matrix_mirror_x_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2) {
+matrix_mirror_mul(struct matrix *mm, const struct matrix *mm1, const struct matrix *mm2, int mirror_x, int mirror_y) {
 	int *m = mm->m;
 	const int *m1 = mm1->m;
 	const int *m2 = mm2->m;
@@ -44,8 +44,8 @@ matrix_mirror_x_mul(struct matrix *mm, const struct matrix *mm1, const struct ma
 	m[1] = (m1[0] * m2[1] + m1[1] * m2[3]) /1024;
 	m[2] = (m1[2] * m2[0] + m1[3] * m2[2]) /1024;
 	m[3] = (m1[2] * m2[1] + m1[3] * m2[3]) /1024;
-	m[4] = (-m1[4] * m2[0] + m1[5] * m2[2]) /1024 + m2[4];
-	m[5] = (-m1[4] * m2[1] + m1[5] * m2[3]) /1024 + m2[5];
+	m[4] = (mirror_x * m1[4] * m2[0] + mirror_y * m1[5] * m2[2]) /1024 + m2[4];
+	m[5] = (mirror_x * m1[4] * m2[1] + mirror_y * m1[5] * m2[3]) /1024 + m2[5];
 }
 
 static inline void

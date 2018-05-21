@@ -37,8 +37,10 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
-			if (arg->mirror)
+			if (arg->mirror_x)
 				xx = -xx;
+			if (arg->mirror_y)
+				yy = -yy;
 
 			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
@@ -158,7 +160,8 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->t.mirror = false;
+	s->t.mirror_x = false;
+	s->t.mirror_y = false;
 	s->flags = 0;
 	s->name = NULL;
 	s->id = id;
@@ -337,10 +340,15 @@ sprite_trans_mul_(struct sprite_trans *b, struct sprite_trans *t, struct matrix 
 	if (t->mat == NULL) {
 		t->mat = b->mat;
 	} else if (b->mat) {
-		if (b->mirror)
-			matrix_mirror_x_mul(tmp_matrix, t->mat, b->mat);
-		else
+		if (!b->mirror_x && !b->mirror_y)
 			matrix_mul(tmp_matrix, t->mat, b->mat);
+		else
+		{
+			int mx = 1, my = 1;
+			if (b->mirror_x) mx = -1;
+			if (b->mirror_y) my = -1;
+			matrix_mirror_mul(tmp_matrix, t->mat, b->mat, mx, my);
+		}
 		t->mat = tmp_matrix;
 	}
 	if (t->color == 0xffffffff) {
@@ -366,7 +374,8 @@ sprite_trans_mul2(struct sprite_pack *pack, struct sprite_trans_data *a, struct 
 	t->program = PROGRAM_DEFAULT;
 	sprite_trans_mul_(b , t, tmp_matrix);
 	t->program = b->program;
-	t->mirror = b->mirror;
+	t->mirror_x = b->mirror_x;
+	t->mirror_y = b->mirror_y;
 
 	return t;
 }
@@ -381,7 +390,8 @@ sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_t
 	if (t->program == PROGRAM_DEFAULT) {
 		t->program = b->program;
 	}
-	t->mirror = b->mirror;
+	t->mirror_x = b->mirror_x;
+	t->mirror_y = b->mirror_y;
 	return t;
 }
 
