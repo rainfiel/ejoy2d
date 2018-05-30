@@ -60,6 +60,7 @@ void sprite_drawpolygon(struct sprite_pack *pack, struct pack_polygon_data *poly
 // sprite_size must be call before sprite_init
 int sprite_size(struct sprite_pack *pack, int id);
 void sprite_init(struct sprite *, struct sprite_pack * pack, int id, int sz);
+void sprite_reset(struct sprite*);
 
 // return action frame number, -1 means action is not exist
 int sprite_action(struct sprite *, const char * action);

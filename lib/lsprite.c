@@ -231,6 +231,14 @@ lnew(lua_State *L) {
 	return 0;
 }
 
+static int
+lreset(lua_State *L) {
+	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
+	if (s)
+		sprite_reset(s);
+	return 0;
+}
+
 static struct sprite *
 self(lua_State *L) {
 	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
@@ -1984,6 +1992,7 @@ int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
+		{ "reset", lreset },
 		{ "label", lnewlabel },
 		{ "drawtext", ldrawtext },
 		{ "splittext", lsplittext },

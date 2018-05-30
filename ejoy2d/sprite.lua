@@ -123,7 +123,8 @@ method.fetch_by_index = fetch_by_index
 method.test = test
 
 local sprite = {
-	string_table = {}
+	string_table = {},
+	sprite_mt = sprite_meta
 }
 
 local registry = debug.getregistry()
@@ -160,6 +161,10 @@ function sprite.direct_new(pack, id)
 	if cobj then
 		return debug.setmetatable(cobj, sprite_meta)
 	end
+end
+
+function sprite.reset(spr)
+	c.reset(spr)
 end
 
 function sprite.label(tbl)

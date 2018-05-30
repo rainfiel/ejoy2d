@@ -150,6 +150,55 @@ sprite_action(struct sprite *s, const char * action) {
 	}
 }
 
+void 
+sprite_reset(struct sprite *s) {
+	s->t.mat = NULL;
+	s->t.color = 0xffffffff;
+	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
+	s->t.mirror_x = false;
+	s->t.mirror_y = false;
+//	s->flags = 0;
+	s->material = NULL;
+
+	if (s->id == ANCHOR_ID) {
+//		s->flags = SPRFLAG_INVISIBLE;
+		if (s->data.anchor) {
+			s->data.anchor->ps = NULL;
+			s->data.anchor->pic = NULL;
+			s->s.mat = &s->data.anchor->mat;
+			matrix_identity(s->s.mat);
+		}
+		return;
+	}
+	offset_t *data = OFFSET_TO_POINTER(offset_t, s->pack, s->pack->data);
+	if (s->type == TYPE_ANIMATION) {
+		sprite_action(s, NULL);
+
+		int i;
+		int n = s->s.ani->component_number;
+		for (i = 0; i<n; i++) {
+			if (s->data.children[i])
+				sprite_reset(s->data.children[i]);
+		}
+	}
+	else {
+		s->start_frame = 0;
+		s->total_frame = 0;
+		s->frame = 0;
+		memset(&s->data, 0, sizeof(s->data));
+
+		if (s->type == TYPE_PANNEL) {
+			struct pack_pannel * pp = OFFSET_TO_POINTER(struct pack_pannel, s->pack, data[s->id]);
+			s->data.scissor = pp->scissor;
+		}
+		else if (s->type == TYPE_LABEL) {
+			struct pack_label * pl = OFFSET_TO_POINTER(struct pack_label, s->pack, data[s->id]);
+			s->data.text_id = pl->text_id;
+		}
+	}
+}
+
 void
 sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	if (id < 0 || id >=	pack->n)
