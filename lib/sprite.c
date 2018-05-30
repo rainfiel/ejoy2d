@@ -186,7 +186,7 @@ sprite_reset(struct sprite *s) {
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
-		memset(&s->data, 0, sizeof(s->data));
+		//memset(&s->data, 0, sizeof(s->data));
 
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = OFFSET_TO_POINTER(struct pack_pannel, s->pack, data[s->id]);
