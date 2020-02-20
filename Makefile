@@ -1,4 +1,4 @@
-.PHONY : mingw ej2d linux undefined
+.PHONY : mingw ej2d linux gameshell undefined
 
 CFLAGS = -g -Wall -Ilib -Ilib/render -Ilua -D EJOY2D_OS=$(OS) -D FONT_EDGE_HASH
 LDFLAGS :=
@@ -100,6 +100,14 @@ winlib : $(SRC) ej2dlib
 
 ej2dlib :
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
+
+gameshell : OS := GAMESHELL
+gameshell : TARGET := ej2d
+gameshell : CFLAGS += -I/usr/include $(shell freetype-config --cflags)
+gameshell : LDFLAGS +=  -lSDL2 -lfreetype -lm
+#gameshell : SRC += posix/window.c posix/winfw.c posix/winfont.c
+
+gameshell : $(SRC) ej2d
 
 linux : OS := LINUX
 linux : TARGET := ej2d
