@@ -16,6 +16,7 @@
 #define OPENGLES 2
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
 
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 

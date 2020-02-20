@@ -102,18 +102,14 @@ ej2dlib :
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 gameshell : OS := GAMESHELL
-gameshell : TARGET := ej2d
-gameshell : CFLAGS += -I/usr/include -D SDL2 $(shell freetype-config --cflags)
-gameshell : LDFLAGS +=  -lSDL2 -lGL -lfreetype -lm
-#gameshell : SRC += posix/window.c posix/winfw.c posix/winfont.c
-
-gameshell : $(SRC) ej2d
+gameshell : target := ej2d
+gameshell : 
 
 linux : OS := LINUX
 linux : TARGET := ej2d
 linux : CFLAGS += -I/usr/include $(shell freetype-config --cflags)
 linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -lm
-linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
+linux : SRC CFLAGS += -I/usr/include $(shell freetype-config --cflags)+= posix/window.c posix/winfw.c posix/winfont.c
 
 linux : $(SRC) ej2d
 
