@@ -12,6 +12,11 @@
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
 
+#elif defined(SDL2)
+#define OPENGLES 2
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 
 #define OPENGLES 2
