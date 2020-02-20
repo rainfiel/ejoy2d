@@ -9,6 +9,7 @@ lib/render/carray.c \
 lib/render/log.c
 
 EJOY2D := \
+lib/lutls.c\
 lib/shader.c \
 lib/lshader.c \
 lib/ejoy2dgame.c \
