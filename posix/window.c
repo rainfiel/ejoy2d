@@ -46,12 +46,13 @@ _gettime(void) {
 
 static void
 update_frame() {
-	ejoy2d_win_frame();
-    
+
     uint32_t current = _gettime();
-    glXSwapBuffers(g_X.display, g_X.wnd);
+    ejoy2d_win_frame();
     uint32_t t = _gettime();
     printf("%d\n", t - current);
+    
+    glXSwapBuffers(g_X.display, g_X.wnd);
 }
 
 static int	
