@@ -56,7 +56,7 @@ glx_init(struct X_context *X)
 	XVisualInfo *vi;
 
 	int attrib[]={
-//		GLX_RGBA, 
+		GLX_RGBA, 
 		GLX_DOUBLEBUFFER, 
 		GLX_DEPTH_SIZE, 1,
 		GLX_STENCIL_SIZE, 1,
@@ -187,7 +187,11 @@ main(int argc, char *argv[]) {
         if (current - timestamp >= UPDATE_INTERVAL) {
             timestamp = current;
             ejoy2d_win_update();
+
+            current = _gettime();
             update_frame();
+            uint32_t t = _gettime();
+            printf("%d\n", t - current);
         } else {
             usleep(1000);
         }
