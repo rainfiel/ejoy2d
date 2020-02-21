@@ -20,7 +20,7 @@ rb:upload()
 
 
 local game = {}
-local screencoord = { x = 512, y = 384, scale = 1.2 }
+--local screencoord = { x = 512, y = 384, scale = 1.2 }
 
 local p = 0
 

@@ -112,7 +112,7 @@ gameshell : $(SRC) ej2d
 
 linux : OS := LINUX
 linux : TARGET := ej2d
-linux : CFLAGS += -I/usr/include $(shell freetype-config --cflags)
+linux : CFLAGS += -I/usr/local/freetype/include/freetype2 -I/usr/include $(shell freetype-config --cflags)
 linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -lm
 linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
 

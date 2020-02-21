@@ -10,7 +10,7 @@
 #include <time.h>
 #include "winfw.h"
 
-#define UPDATE_INTERVAL 1       /* 10ms */
+#define UPDATE_INTERVAL 10       /* 10ms */
 
 void font_init();
 
@@ -56,7 +56,7 @@ glx_init(struct X_context *X)
 	XVisualInfo *vi;
 
 	int attrib[]={
-		GLX_RGBA, 
+//		GLX_RGBA, 
 		GLX_DOUBLEBUFFER, 
 		GLX_DEPTH_SIZE, 1,
 		GLX_STENCIL_SIZE, 1,
@@ -100,7 +100,7 @@ init_x() {
 
     
     win=XCreateSimpleWindow(dis,DefaultRootWindow(dis),0,0,
-                            WIDTH, HEIGHT, 5,white, black);
+                            WIDTH, HEIGHT, 0,white, black);
 
     XMapWindow(dis, win);
     wm_delete_window = XInternAtom(dis, "WM_DELETE_WINDOW", False);

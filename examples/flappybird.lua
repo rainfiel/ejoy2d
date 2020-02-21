@@ -13,8 +13,8 @@ pack.load {
 
 local DEBUG = false
 
-local screen_width = 1024
-local screen_height = 768
+local screen_width = 320
+local screen_height = 230
 
 -- all sprites
 local sky1 = ej.sprite("birds", "sky_bg")
