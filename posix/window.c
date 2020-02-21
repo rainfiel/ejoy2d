@@ -47,7 +47,11 @@ _gettime(void) {
 static void
 update_frame() {
 	ejoy2d_win_frame();
+    
+    uint32_t current = _gettime();
     glXSwapBuffers(g_X.display, g_X.wnd);
+    uint32_t t = _gettime();
+    printf("%d\n", t - current);
 }
 
 static int	
@@ -188,10 +192,7 @@ main(int argc, char *argv[]) {
             timestamp = current;
             ejoy2d_win_update();
 
-            current = _gettime();
             update_frame();
-            uint32_t t = _gettime();
-            printf("%d\n", t - current);
         } else {
             usleep(1000);
         }
